@@ -1,4 +1,8 @@
+const en = window.en;
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Use en global variable from en.js (loaded in HTML before this file)
+    
     // Game puzzle configuration in a single data structure
     const puzzleData = {
         // Palette types for each row (in order)
@@ -38,6 +42,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const hintButton = document.getElementById('hint-button');
     const resetButton = document.getElementById('reset-button');
     
+    // Update UI text from localization
+    checkButton.textContent = en.buttons.showSolution;
+    hintButton.textContent = en.buttons.showHint;
+    resetButton.textContent = en.buttons.resetGame;
+    document.querySelector('.game-info h2').textContent = en.howToPlay.title;
+    document.querySelector('.game-info p').textContent = en.howToPlay.instructions;
+    
+    // Update palette type names and descriptions
+    const paletteTypes = document.querySelectorAll('.palette-type h3, .palette-type p');
+    for (let i = 0; i < paletteTypes.length; i += 2) {
+        const typeKey = puzzleData.paletteTypes[Math.floor(i/2)];
+        const nameElem = paletteTypes[i];
+        const descElem = paletteTypes[i + 1];
+        
+        if (nameElem) {
+            const rowNum = Math.floor(i/2) + 1;
+            nameElem.textContent = `Row ${rowNum}: ${en.paletteTypes[typeKey].name}`;
+        }
+        
+        if (descElem) {
+            descElem.textContent = en.paletteTypes[typeKey].description;
+        }
+    }
+    
+    // Update stat labels
+    document.querySelectorAll('.stat-label')[0].textContent = en.stats.time;
+    document.querySelectorAll('.stat-label')[1].textContent = en.stats.blunders;
+    document.querySelectorAll('.stat-label')[2].textContent = en.stats.hints;
+    
     // Game state
     let draggedTile = null;
     let activeTiles = [];
@@ -64,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateHintsDisplay();
         
         // Reset hint button
-        hintButton.textContent = "Show Hint";
+        hintButton.textContent = en.buttons.showHint;
         hintButton.disabled = false;
         
         // Clear any active hint countdown
@@ -279,10 +312,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 newEmptySlot.addEventListener('drop', handleDrop);
                 
                 tempTile.parentNode.replaceChild(newEmptySlot, tempTile);
-                draggedTile.style.opacity = '1';
+                if (draggedTile) {
+                    draggedTile.style.opacity = '1';
+                }
             }, 500);
             
-            messageArea.textContent = "Cannot place duplicate colors in the same row!";
+            messageArea.textContent = en.messages.duplicateColor;
             messageArea.className = 'message-area error';
             
             return;
@@ -314,10 +349,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     newEmptySlot.addEventListener('drop', handleDrop);
                     
                     tempTile.parentNode.replaceChild(newEmptySlot, tempTile);
-                    draggedTile.style.opacity = '1';
+                    if (draggedTile) {
+                        draggedTile.style.opacity = '1';
+                    }
                 }, 500);
                 
-                messageArea.textContent = "Tiles can only be moved within the same row!";
+                messageArea.textContent = en.messages.sameRowOnly;
                 messageArea.className = 'message-area error';
                 
                 return;
@@ -347,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 newTile.classList.add('wrong-position');
                 
                 // Show message
-                messageArea.textContent = "Right color, wrong position in the row!";
+                messageArea.textContent = en.messages.wrongPosition;
                 messageArea.className = 'message-area error';
                 
                 // Remove the animation class after it completes
@@ -399,10 +436,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     newEmptySlot.addEventListener('drop', handleDrop);
                     
                     tempTile.parentNode.replaceChild(newEmptySlot, tempTile);
-                    draggedTile.style.opacity = '1';
+                    if (draggedTile) {
+                        draggedTile.style.opacity = '1';
+                    }
                 }, 500);
                 
-                messageArea.textContent = "This tile doesn't belong in this row!";
+                messageArea.textContent = en.messages.wrongRow;
                 messageArea.className = 'message-area error';
                 
                 return;
@@ -424,7 +463,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 newTile.classList.add('wrong-position');
                 
                 // Show message
-                messageArea.textContent = "Right color, wrong position in the row!";
+                messageArea.textContent = en.messages.wrongPosition;
                 messageArea.className = 'message-area error';
                 
                 // Remove the animation class after it completes
@@ -485,11 +524,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (solutionVisible) {
             // Show the solution
             showSolution();
-            checkButton.textContent = "Hide Solution";
+            checkButton.textContent = en.buttons.hideSolution;
         } else {
             // Hide the solution and restore the current state
             hideSolution();
-            checkButton.textContent = "Show Solution";
+            checkButton.textContent = en.buttons.showSolution;
         }
     }
     
@@ -528,7 +567,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        messageArea.textContent = "👀 Solution shown. Click 'Hide Solution' to continue your game.";
+        messageArea.textContent = en.messages.showingSolution;
         messageArea.className = 'message-area hint';
     }
     
@@ -537,7 +576,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Restore the board to its previous state
         restoreBoardState();
         
-        messageArea.textContent = "Continue arranging the tiles to complete the puzzle!";
+        messageArea.textContent = en.messages.continueArranging;
         messageArea.className = 'message-area';
     }
     
@@ -733,7 +772,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const minutes = Math.floor(elapsedSeconds / 60);
         const seconds = elapsedSeconds % 60;
         
-        messageArea.textContent = `🎉 Congratulations! You solved it in ${minutes}m ${seconds}s with ${blunders} blunders and ${hintsUsed} hints used!`;
+        const successMessage = en.messages.congratulations
+            .replace('{minutes}', minutes)
+            .replace('{seconds}', seconds)
+            .replace('{blunders}', blunders)
+            .replace('{hintsUsed}', hintsUsed);
+            
+        messageArea.textContent = successMessage;
         messageArea.className = 'message-area success';
         
         // Add celebration animation
@@ -789,14 +834,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Show message
-        messageArea.textContent = "💡 Showing all tiles incorrectly placed within the palette";
+        messageArea.textContent = en.messages.showingHint;
         messageArea.className = 'message-area hint';
         
         // Start countdown from 10 seconds
         let countdownTime = 10;
         
         // Update button text with countdown
-        hintButton.textContent = `Hint (${countdownTime}s)`;
+        hintButton.textContent = en.buttons.hintWithCountdown.replace('{seconds}', countdownTime);
         
         // Clear any existing countdown
         if (hintCountdownInterval) {
@@ -808,7 +853,7 @@ document.addEventListener('DOMContentLoaded', function() {
             countdownTime--;
             
             // Update button text
-            hintButton.textContent = `Hint (${countdownTime}s)`;
+            hintButton.textContent = en.buttons.hintWithCountdown.replace('{seconds}', countdownTime);
             
             // When countdown reaches 0
             if (countdownTime <= 0) {
@@ -822,7 +867,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 
                 // Reset button text and enable it
-                hintButton.textContent = "Show Hint";
+                hintButton.textContent = en.buttons.showHint;
                 hintButton.disabled = false;
                 
                 // Clear message
