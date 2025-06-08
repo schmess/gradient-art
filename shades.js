@@ -311,11 +311,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }, 500);
             } else {
-                // Clear any error messages if placement is correct
-                if (messageArea.className.includes('error')) {
-                    messageArea.textContent = "";
-                    messageArea.className = 'message-area';
-                }
+                // Correct position - show positive feedback
+                newTile.classList.add('correct-position');
+                
+                // Clear any messages
+                messageArea.textContent = "";
+                messageArea.className = 'message-area';
+                
+                // Remove the animation class after it completes
+                setTimeout(() => {
+                    if (newTile.parentNode) { // Check if tile is still in the DOM
+                        newTile.classList.remove('correct-position');
+                    }
+                }, 500);
             }
             
             // Replace the empty slot with the new tile
@@ -380,11 +388,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }, 500);
             } else {
-                // Clear any error messages if placement is correct
-                if (messageArea.className.includes('error')) {
-                    messageArea.textContent = "";
-                    messageArea.className = 'message-area';
-                }
+                // Correct position - show positive feedback
+                newTile.classList.add('correct-position');
+                
+                // Clear any messages
+                messageArea.textContent = "";
+                messageArea.className = 'message-area';
+                
+                // Remove the animation class after it completes
+                setTimeout(() => {
+                    if (newTile.parentNode) { // Check if tile is still in the DOM
+                        newTile.classList.remove('correct-position');
+                    }
+                }, 500);
             }
             
             // Replace the empty slot with the new tile
@@ -606,7 +622,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (allCorrect) {
             showSuccess();
         } else {
-            showError();
+            // if needed, show puzzle is not completed message
         }
         
         return allCorrect;
@@ -664,12 +680,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 tile.classList.remove('correct');
             }, 1000);
         });
-    }
-    
-    // Show error message
-    function showError() {
-        messageArea.textContent = 'Not quite right. Keep working on the palette arrangements!';
-        messageArea.className = 'message-area error';
     }
     
     // Show hint

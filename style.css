@@ -414,12 +414,17 @@ button:active {
 
 /* Animation for when tiles are placed correctly */
 @keyframes correctPlacement {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+    0% { transform: scale(1); box-shadow: 0 0 0 rgba(76, 175, 80, 0.5); }
+    50% { transform: scale(1.1); box-shadow: 0 0 10px rgba(76, 175, 80, 0.8); }
+    100% { transform: scale(1); box-shadow: 0 0 0 rgba(76, 175, 80, 0.5); }
 }
 
 .correct {
+    animation: correctPlacement 0.5s;
+    border: 2px solid var(--success);
+}
+
+.correct-position {
     animation: correctPlacement 0.5s;
     border: 2px solid var(--success);
 }
