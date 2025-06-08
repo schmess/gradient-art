@@ -87,8 +87,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear matrices
         scrambledMatrix.innerHTML = '';
         solutionMatrix.innerHTML = '';
-        messageArea.textContent = '';
-        messageArea.className = 'message-area';
+        
+        // Add welcome message
+        messageArea.textContent = en.messages.welcome;
+        messageArea.className = 'message-area hint';
         
         // Reset game stats
         blunders = 0;

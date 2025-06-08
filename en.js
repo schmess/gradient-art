@@ -1,55 +1,64 @@
 // English language strings for Shades game
-window.en = {  
+window.en = {
+  gameTitle: "Shades",
+  gameSubtitle: "Create Beautiful Color Palettes",
+  
+  matrices: {
+    scrambled: "Color Pool",
+    solution: "Your Canvas"
+  },
+  
   buttons: {
-    showSolution: "Show Solution",
-    hideSolution: "Hide Solution",
-    showHint: "Show Hint",
+    showSolution: "Show Me How ✨",
+    hideSolution: "Let Me Try Again",
+    showHint: "Need a Hint? 💡",
     hintWithCountdown: "Hint ({seconds}s)",
-    resetGame: "Reset Game"
+    resetGame: "Start Fresh"
   },
   
   stats: {
     time: "Time",
-    blunders: "Blunders", 
-    hints: "Hints"
+    blunders: "Attempts", 
+    hints: "Inspirations"
   },
   
   messages: {
-    duplicateColor: "Cannot place duplicate colors in the same row!",
-    wrongRow: "This tile doesn't belong in this row!",
-    wrongPosition: "Right color, wrong position in the row!",
-    sameRowOnly: "Tiles can only be moved within the same row!",
-    showingSolution: "👀 Solution shown. Click 'Hide Solution' to continue your game.",
-    continueArranging: "Continue arranging the tiles to complete the puzzle!",
-    showingHint: "💡 Showing all tiles incorrectly placed within the palette",
-    congratulations: "🎉 Congratulations! You solved it in {minutes}m {seconds}s with {blunders} blunders and {hintsUsed} hints used!"
+    welcome: "✨ Welcome! Drag colors from the pool on the left to your canvas on the right to create beautiful palettes!",
+    duplicateColor: "This color is already in your palette! Try another shade instead 🎨",
+    wrongRow: "This color belongs in another palette! Try a different row ✨",
+    wrongPosition: "Good color choice! Try placing it somewhere else in this row 👍",
+    sameRowOnly: "Let's keep colors in their palette families! Try moving within the same row 🌈",
+    showingSolution: "✨ Here's how it should look! When you're ready, click 'Let Me Try Again'",
+    continueArranging: "You're doing great! Keep arranging colors to create beautiful palettes 🎨",
+    showingHint: "💫 Here's a hint! The highlighted colors might look better in a different spot",
+    congratulations: "🎉 Amazing work! You created beautiful palettes in {minutes}m {seconds}s with {blunders} attempts and {hintsUsed} inspirations!"
   },
   
   howToPlay: {
-    title: "How to Play:",
-    instructions: "Drag tiles from the Scrambled Matrix on the left and drop them into the Solution Matrix on the right. Each row in the Solution Matrix represents a different type of color palette. The locked tiles provide hints about each palette type. Arrange tiles to match the correct color relationships. Click \"Show Hint\" for help or \"Show Solution\" to reveal the correct arrangement."
+    title: "Create Something Beautiful:",
+    instructions: "Drag colors from the Color Pool to Your Canvas to create stunning palettes. Each row represents a different color relationship. The locked colors (🔒) are your guides - they're already in the perfect spot! Arrange the remaining colors to create harmonious combinations. Need help? Click \"Need a Hint\" or \"Show Me How\" for inspiration."
   },
   
   paletteTypes: {
     monochromatic: {
-      name: "Monochromatic",
-      description: "Variations in lightness of a single hue"
+      name: "Sunset Palette",
+      description: "Like a sunset fading to night - light to dark variations of one color"
     },
     analogous: {
-      name: "Analogous",
-      description: "Adjacent colors on the color wheel"
+      name: "Harmony Blend",
+      description: "Colors that sit next to each other - like spring flowers in a garden"
     },
     triadic: {
-      name: "Triadic",
-      description: "Three equidistant colors"
+      name: "Vibrant Trio",
+      description: "Three bold colors that create energy and excitement"
     },
     splitComplementary: {
-      name: "Split Complementary",
-      description: "Base + two flanking colors"
+      name: "Dynamic Balance",
+      description: "A main color with two accent colors that make it pop"
     },
     complementary: {
-      name: "Complementary",
-      description: "Opposite colors on the color wheel"
+      name: "Perfect Contrast",
+      description: "Opposite colors that create dramatic, eye-catching combinations"
     }
   }
 };
