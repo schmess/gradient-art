@@ -109,12 +109,8 @@ h1 {
     position: relative;
     border: 1px solid rgba(255, 255, 255, 0.3);
     aspect-ratio: 1/1;
-    max-width: min(40vw, 70vh);
-    min-width: min(40vw, 70vh);
-    width: min(40vw, 70vh);
-    min-height: min(40vw, 70vh);
-    max-height: min(40vw, 70vh);
-    height: min(40vw, 70vh);
+    width: clamp(250px, 40vw, 500px);
+    height: clamp(250px, 40vw, 500px);
 }
 
 .matrix {
@@ -128,13 +124,36 @@ h1 {
     position: relative;
 }
 
+@media (max-width: 768px) {
+    .matrix-container {
+        padding: 12px;
+        margin: 0;
+        aspect-ratio: 1/1;
+        width: 45vw;
+        height: 45vw;
+        min-width: 45vw;
+        min-height: 45vw;
+        max-width: 45vw;
+        max-height: 45vw;
+    }
+    
+    .matrix {
+        aspect-ratio: 1/1;
+        gap: 8px;
+    }
+}
+
 @media (max-width: 768px) and (orientation: landscape) {
     .matrix-container {
-        padding: 5px;
+        padding: 8px;
         margin: 0;
-        height: 70vh;
-        max-width: 70vh;
-        max-width: 45%;
+        aspect-ratio: 1/1;
+        width: 35vh;
+        height: 35vh;
+        min-width: 35vh;
+        min-height: 35vh;
+        max-width: 35vh;
+        max-height: 35vh;
     }
 }
 
@@ -720,6 +739,9 @@ button:active {
     .tile {
         touch-action: none; /* Prevent browser handling of touches */
         -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
+        aspect-ratio: 1/1 !important; /* Force square tiles */
+        width: 100%;
+        height: auto;
     }
     
     .tile:active {
@@ -728,7 +750,25 @@ button:active {
     
     /* Increase hit areas */
     .empty-slot {
-        min-height: 40px;
-        min-width: 40px;
+        aspect-ratio: 1/1 !important;
+        width: 100%;
+    }
+    
+    /* Force game container layout */
+    .game-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        width: 95%;
+        max-width: 95vw;
+    }
+    
+    /* Ensure all grid cells maintain aspect ratio */
+    .matrix {
+        grid-template-columns: repeat(5, 1fr);
+        grid-template-rows: repeat(5, 1fr);
+        width: 100%;
+        height: 100%;
     }
 }
