@@ -164,6 +164,11 @@ h1 {
     font-size: 1.5rem;
     color: rgba(255, 255, 255, 0.8);
     text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.5s ease-out;
+}
+
+.tile.locked.hide-lock::after {
+    opacity: 0;
 }
 
 .controls {

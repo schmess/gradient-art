@@ -3,9 +3,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const palettes = {
         monochromatic: ['#e6f2ff', '#bfd9ff', '#99c2ff', '#6699ff', '#3366ff'],
         analogous: ['#ff9999', '#ffcc99', '#ffff99', '#ccff99', '#99ffcc'],
-        complementary: ['#ff5555', '#ff9999', '#ffffff', '#9999ff', '#5555ff'],
+        triadic: ['#ff5555', '#55ff55', '#5555ff', '#ff5555', '#5555ff'],
         splitComplementary: ['#ff6600', '#ff9933', '#33cc99', '#66cc99', '#cc33cc'],
-        triadic: ['#ff5555', '#55ff55', '#5555ff', '#ff5555', '#5555ff']
+        complementary: ['#ff5555', '#ff9999', '#ffffff', '#9999ff', '#5555ff']
     };
     
     // Game elements
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let timerInterval = null;
     let hintCountdownInterval = null;
     let solutionVisible = false; // Track if solution is currently shown
-    let paletteTypesVisible = false; // Track if palette types are visible
+    let firstMoveMade = false; // Track if the first move has been made
     
     // Initialize game
     function initGame() {
@@ -59,17 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Reset visibility states
         solutionVisible = false;
-        paletteTypesVisible = false;
-        
-        // Hide palette types UI
-        const rowLabels = document.querySelector('.row-labels');
-        rowLabels.classList.remove('visible');
-        
-        // Reset palette button text
-        const paletteButton = document.getElementById('palette-button');
-        if (paletteButton) {
-            paletteButton.textContent = "Show Palette Types";
-        }
+        firstMoveMade = false;
         
         // Create all color tiles
         const allColors = [];
@@ -85,19 +75,46 @@ document.addEventListener('DOMContentLoaded', function() {
             scrambledMatrix.appendChild(tile);
         });
         
-        // Create solution matrix with locked center column
+        // Create solution matrix with specific locked tiles for each row
         for (let row = 0; row < 5; row++) {
             for (let col = 0; col < 5; col++) {
                 // Calculate the index in a 5x5 grid
                 const index = row * 5 + col;
                 
-                // For center column (col = 2), place locked tiles with the correct colors
-                if (col === 2) {
+                // Determine if this position should be locked based on the row
+                let shouldLock = false;
+                
+                // For row 1, only the center column (col 2) is locked
+                if (row === 0 && col === 2) {
+                    shouldLock = true;
+                }
+                // For row 2, columns 1 and 3 (index 1 and 3) are locked - using zero-based indexing
+                // This shows the second and fourth columns (columns 2 and 4 in one-based indexing)
+                else if (row === 1 && (col === 1 || col === 3)) {
+                    shouldLock = true;
+                }
+                // For row 3, columns 0, 2, and 4 are locked
+                // This shows the first, third, and fifth columns (columns 1, 3, 5 in one-based indexing)
+                else if (row === 2 && (col === 0 || col === 2 || col === 4)) {
+                    shouldLock = true;
+                }
+                // For row 4, columns 1 and 3 (index 1 and 3) are locked - using zero-based indexing
+                // This shows the second and fourth columns (columns 2 and 4 in one-based indexing)
+                else if (row === 3 && (col === 1 || col === 3)) {
+                    shouldLock = true;
+                }
+                // For row 5, only the center column (col 2) is locked
+                else if (row === 4 && col === 2) {
+                    shouldLock = true;
+                }
+                
+                if (shouldLock) {
+                    // Place locked tile with correct color
                     const paletteType = Object.keys(palettes)[row];
                     const palette = palettes[paletteType];
-                    const centerTile = createTile(palette[2], index, 'locked');
-                    centerTile.classList.add('locked');
-                    solutionMatrix.appendChild(centerTile);
+                    const lockedTile = createTile(palette[col], index, 'locked');
+                    lockedTile.classList.add('locked');
+                    solutionMatrix.appendChild(lockedTile);
                 } else {
                     // Create empty slots for other positions
                     const emptySlot = document.createElement('div');
@@ -143,6 +160,17 @@ document.addEventListener('DOMContentLoaded', function() {
         return tile;
     }
     
+    // Function to hide lock emojis
+    function hideLockEmojis() {
+        if (!firstMoveMade) {
+            firstMoveMade = true;
+            const lockedTiles = document.querySelectorAll('.tile.locked');
+            lockedTiles.forEach(tile => {
+                tile.classList.add('hide-lock');
+            });
+        }
+    }
+    
     // Helper function to lighten a color
     function lightenColor(color, percent) {
         const num = parseInt(color.replace('#', ''), 16);
@@ -182,6 +210,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.preventDefault) {
             e.preventDefault(); // Necessary to allow drop
         }
+        
+        // Only allow dropping on empty slots
+        if (!this.classList.contains('empty-slot')) {
+            return false;
+        }
+        
         e.dataTransfer.dropEffect = 'move';
         return false;
     }
@@ -427,6 +461,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update active tiles
         updateActiveTiles();
         
+        // Hide lock emojis after first move
+        hideLockEmojis();
+        
         // Auto-check solution after each move
         checkCompletedSolution();
     }
@@ -463,7 +500,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Save current state to be able to restore it
         saveBoardState();
         
-        // Clear the solution matrix except for the center column
+        // Clear the solution matrix except for locked tiles
         clearSolutionMatrix();
         
         // Place all tiles in their correct positions
@@ -471,24 +508,40 @@ document.addEventListener('DOMContentLoaded', function() {
             const paletteType = Object.keys(palettes)[row];
             const correctPalette = palettes[paletteType];
             
-            // For each row, collect all colors needed (excluding the center which is already there)
-            const colorsNeeded = [];
             for (let col = 0; col < 5; col++) {
-                if (col !== 2) { // Skip center column
-                    colorsNeeded.push(correctPalette[col]);
-                }
-            }
-            
-            // Place these colors in the available slots for this row
-            let colorsPlaced = 0;
-            for (let col = 0; col < 5; col++) {
-                if (col === 2) continue; // Skip the center column as it's already filled
-                
                 const index = row * 5 + col;
-                const colorToPlace = colorsNeeded[colorsPlaced];
-                colorsPlaced++;
                 
-                // Create a tile with the correct color
+                // Determine if this is a locked position by checking row and col pattern
+                let isLockedPosition = false;
+                
+                // For row 1, only the center column (col 2) is locked
+                if (row === 0 && col === 2) {
+                    isLockedPosition = true;
+                }
+                // For row 2, columns 1 and 3 are locked
+                else if (row === 1 && (col === 1 || col === 3)) {
+                    isLockedPosition = true;
+                }
+                // For row 3, columns 0, 2, and 4 are locked
+                else if (row === 2 && (col === 0 || col === 2 || col === 4)) {
+                    isLockedPosition = true;
+                }
+                // For row 4, columns 1 and 3 are locked
+                else if (row === 3 && (col === 1 || col === 3)) {
+                    isLockedPosition = true;
+                }
+                // For row 5, only the center column (col 2) is locked
+                else if (row === 4 && col === 2) {
+                    isLockedPosition = true;
+                }
+                
+                // Skip any locked tiles (they're already there)
+                if (isLockedPosition) {
+                    continue;
+                }
+                
+                // Create a tile with the correct color for this position
+                const colorToPlace = correctPalette[col];
                 const newTile = createTile(colorToPlace, index, 'solution');
                 newTile.classList.add('solution-tile'); // Mark as part of the solution
                 
@@ -525,28 +578,79 @@ document.addEventListener('DOMContentLoaded', function() {
                 const tile = solutionMatrix.querySelector(`.tile[data-index="${index}"]`);
                 
                 if (tile && !tile.classList.contains('empty-slot')) {
+                    // Determine if this is a locked position by checking row and col pattern
+                    let isLockedPosition = false;
+                    
+                    // For row 1, only the center column (col 2) is locked
+                    if (row === 0 && col === 2) {
+                        isLockedPosition = true;
+                    }
+                    // For row 2, columns 1 and 3 are locked
+                    else if (row === 1 && (col === 1 || col === 3)) {
+                        isLockedPosition = true;
+                    }
+                    // For row 3, columns 0, 2, and 4 are locked
+                    else if (row === 2 && (col === 0 || col === 2 || col === 4)) {
+                        isLockedPosition = true;
+                    }
+                    // For row 4, columns 1 and 3 are locked
+                    else if (row === 3 && (col === 1 || col === 3)) {
+                        isLockedPosition = true;
+                    }
+                    // For row 5, only the center column (col 2) is locked
+                    else if (row === 4 && col === 2) {
+                        isLockedPosition = true;
+                    }
+                    
                     // Save the color and position
                     window.savedState.push({
                         index: index,
                         color: tile.dataset.color,
-                        locked: tile.classList.contains('locked')
+                        locked: isLockedPosition
                     });
                 }
             }
         }
     }
     
-    // Function to clear the solution matrix except for the center column
+    // Function to clear the solution matrix except for locked tiles
     function clearSolutionMatrix() {
         for (let row = 0; row < 5; row++) {
             for (let col = 0; col < 5; col++) {
-                if (col === 2) continue; // Skip center column
-                
                 const index = row * 5 + col;
                 const tile = solutionMatrix.querySelector(`.tile[data-index="${index}"]`);
                 
-                if (tile && !tile.classList.contains('locked')) {
-                    // Create an empty slot
+                // Determine if this is a locked position by checking row and col pattern
+                let isLockedPosition = false;
+                
+                // For row 1, only the center column (col 2) is locked
+                if (row === 0 && col === 2) {
+                    isLockedPosition = true;
+                }
+                // For row 2, columns 1 and 3 are locked
+                else if (row === 1 && (col === 1 || col === 3)) {
+                    isLockedPosition = true;
+                }
+                // For row 3, columns 0, 2, and 4 are locked
+                else if (row === 2 && (col === 0 || col === 2 || col === 4)) {
+                    isLockedPosition = true;
+                }
+                // For row 4, columns 1 and 3 are locked
+                else if (row === 3 && (col === 1 || col === 3)) {
+                    isLockedPosition = true;
+                }
+                // For row 5, only the center column (col 2) is locked
+                else if (row === 4 && col === 2) {
+                    isLockedPosition = true;
+                }
+                
+                // Skip any locked tiles
+                if (isLockedPosition && tile) {
+                    continue;
+                }
+                
+                // Create an empty slot for any non-locked position
+                if (tile) {
                     const emptySlot = document.createElement('div');
                     emptySlot.className = 'tile empty-slot';
                     emptySlot.dataset.index = index;
@@ -562,19 +666,46 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to restore the board to its saved state
     function restoreBoardState() {
-        // First clear the board (except center column)
+        // First clear the board (except locked positions)
         clearSolutionMatrix();
         
         // Then restore each saved tile
         if (window.savedState) {
             window.savedState.forEach(saved => {
-                // Skip locked tiles (they're already there)
-                if (saved.locked) return;
-                
                 const index = saved.index;
+                const row = Math.floor(index / 5);
+                const col = index % 5;
+                
+                // Determine if this is a locked position by checking row and col pattern
+                let isLockedPosition = false;
+                
+                // For row 1, only the center column (col 2) is locked
+                if (row === 0 && col === 2) {
+                    isLockedPosition = true;
+                }
+                // For row 2, columns 1 and 3 are locked
+                else if (row === 1 && (col === 1 || col === 3)) {
+                    isLockedPosition = true;
+                }
+                // For row 3, columns 0, 2, and 4 are locked
+                else if (row === 2 && (col === 0 || col === 2 || col === 4)) {
+                    isLockedPosition = true;
+                }
+                // For row 4, columns 1 and 3 are locked
+                else if (row === 3 && (col === 1 || col === 3)) {
+                    isLockedPosition = true;
+                }
+                // For row 5, only the center column (col 2) is locked
+                else if (row === 4 && col === 2) {
+                    isLockedPosition = true;
+                }
+                
+                // Skip locked tiles (they're already there)
+                if (isLockedPosition) return;
+                
                 const slot = solutionMatrix.querySelector(`.tile[data-index="${index}"]`);
                 
-                if (slot) {
+                if (slot && !isLockedPosition) {
                     const newTile = createTile(saved.color, index, 'solution');
                     slot.parentNode.replaceChild(newTile, slot);
                 }
@@ -797,39 +928,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Function to toggle palette type visibility
-    function togglePaletteTypes() {
-        paletteTypesVisible = !paletteTypesVisible;
-        
-        const rowLabels = document.querySelector('.row-labels');
-        const paletteButton = document.getElementById('palette-button');
-        
-        if (paletteTypesVisible) {
-            // Show palette types
-            rowLabels.classList.add('visible');
-            paletteButton.textContent = "Hide Palette Types";
-            
-            // Show a message explaining palette types
-            messageArea.textContent = "Palette types shown. Each row corresponds to a different color relationship pattern.";
-            messageArea.className = 'message-area hint';
-        } else {
-            // Hide palette types
-            rowLabels.classList.remove('visible');
-            paletteButton.textContent = "Show Palette Types";
-            
-            // Clear message area if it's showing the palette message
-            if (messageArea.textContent.includes("Palette types shown")) {
-                messageArea.textContent = "";
-                messageArea.className = 'message-area';
-            }
-        }
-    }
+    // Function to toggle palette type visibility - Removed
     
     // Event listeners
     checkButton.addEventListener('click', checkSolution);
     hintButton.addEventListener('click', showHint);
-    const paletteButton = document.getElementById('palette-button');
-    paletteButton.addEventListener('click', togglePaletteTypes);
     resetButton.addEventListener('click', initGame);
     
     // Initialize the game
