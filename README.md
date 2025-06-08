@@ -14,6 +14,8 @@ The Gradient Artist is an educational puzzle game that teaches color theory thro
 - Hint system with 10-second countdown
 - Score tracking for blunders and hints used
 - Fully localized text (currently in English)
+- Mobile-optimized touch controls with responsive design
+- Performance-optimized animations and transitions
 
 ## How to Play
 
@@ -23,23 +25,81 @@ The Gradient Artist is an educational puzzle game that teaches color theory thro
 4. Arrange tiles to match the correct color relationships
 5. Click "Show Hint" for help or "Show Solution" to reveal the correct arrangement
 
-## Running Locally
+## Development
 
-### Option 1: Using a local server (recommended)
+### Prerequisites
 
-1. Navigate to the project directory in your terminal
-2. Run the local server: `node server.js`
-3. Open your browser and go to `http://localhost:3000`
+- Node.js and npm
 
-### Option 2: Direct file opening
+### Getting Started
 
-You can open the `index.html` file directly in your browser, but the localization feature might not work due to CORS restrictions when loading local files. The game will fall back to hardcoded English strings in this case.
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/schmess/gradient-art.git
+cd gradient-art
+npm install
+```
+
+### Development Server
+
+Start the development server:
+
+```bash
+npm start
+```
+
+This will start a webpack dev server at http://localhost:8080 with hot module replacement.
+
+### Building for Production
+
+Build the project for production:
+
+```bash
+npm run build
+```
+
+This will create a `dist` directory with compressed, hashed assets ready for deployment.
+
+### Build for Development
+
+To build the project for development (with source maps):
+
+```bash
+npm run build:dev
+```
+
+### Serving the Build
+
+To serve the built files locally:
+
+```bash
+npm run serve
+```
+
+### Deployment
+
+Deploy to GitHub Pages:
+
+```bash
+npm run deploy
+```
+
+## Project Structure
+
+- `src/` - Source files
+  - `index.js` - Main entry point
+  - `game.js` - Game logic
+  - `en.js` - Localization strings
+  - `style.css` - Styling
+- `dist/` - Built files (generated with content hashing for cache busting)
+- `webpack.config.js` - Webpack configuration
 
 ## Customization
 
-- Add new languages by creating additional localization files (e.g., `fr.json`, `es.json`) following the structure of `en.json`
-- Modify the puzzle configuration in the `puzzleData` object in `shades.js` to create different puzzle scenarios
+- Add new languages by creating additional localization files following the structure of `en.js`
+- Modify the puzzle configuration in the `puzzleData` object in `game.js` to create different puzzle scenarios
 
 ## License
 
-[MIT License](LICENSE)
+ISC
