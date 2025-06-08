@@ -1,0 +1,80 @@
+The Gradient Artist game
+
+
+# The Gradient Artist: Color Theory Puzzle Game Design Document
+## Game Concept Overview
+The Gradient Artist is an educational puzzle game that teaches color theory through interactive tile-based gameplay. Players reconstruct scrambled color palettes by manipulating tiles in a 5x5 matrix, where each row represents a different color palette type. The game combines strategic thinking with visual design principles, creating an engaging learning experience for both casual players and design enthusiasts.
+Core Learning Objective: Players develop understanding of six fundamental color palette types through hands-on manipulation and pattern recognition, building both theoretical knowledge and practical color sense.
+## Color Palette Foundation
+### The Six Palette Types
+Monochromatic Palettes use a single hue with variations in lightness and saturation. These palettes create sophisticated, harmonious compositions through value contrast rather than hue contrast. In a 5-tile row, players see a progression from light tints (adding white) through the pure hue to darker shades (adding black), creating elegant depth and unity.
+Analogous Palettes feature 3-5 colors positioned within 30-60 degrees of each other on the color wheel. These palettes mimic natural color relationships found in sunsets, forests, and seasonal changes. The 5-tile sequence creates smooth color transitions that feel organic and soothing, with each tile naturally flowing to the next.
+Complementary Palettes pair colors positioned exactly 180 degrees apart on the color wheel, creating maximum contrast and visual impact. The 5-tile arrangement alternates between the two complement colors and their variations, generating dynamic tension and vibrant energy that demands attention.
+Split Complementary Palettes combine one base color with the two colors flanking its direct complement, creating sophisticated contrast with less tension than pure complementary schemes. The 5-tile sequence establishes triangular color relationships that offer versatility and refined visual balance.
+Triadic Palettes use three colors evenly spaced at 120-degree intervals, forming an equilateral triangle on the color wheel. These combinations create vibrant, balanced compositions with high contrast while maintaining color harmony. The 5-tile arrangement cycles through the three main colors with their variations, producing playful yet balanced results.
+Tetradic Palettes employ four colors in two complementary pairs, offering the richest possible color variety. These complex schemes require careful balance to prevent visual overwhelm, with the 5-tile sequence thoughtfully distributing the four colors to create sophisticated, multi-dimensional harmony.
+## Core Gameplay Mechanics
+### Matrix Structure and Layout
+The game presents two parallel 5x5 grids: a Scrambled Matrix containing randomly distributed tiles and a Solution Matrix where players reconstruct the correct palette arrangements. Each row represents one palette type, with rows assigned as follows:
+* Row 1: Monochromatic
+* Row 2: Analogous
+* Row 3: Complementary
+* Row 4: Split Complementary
+* Row 5: Triadic
+* Bonus Row: Tetradic (unlocked after mastering first five)
+The central column (column 3) in the Solution Matrix remains pre-filled as a strategic hint, providing anchor colors that guide players toward correct palette construction. This design choice reduces cognitive load while maintaining challenge, as players must understand how the other tiles relate to these central references.
+### Insertion-Based Tile Placement
+The innovative insertion mechanic allows players to place tiles anywhere within a row, automatically shifting existing tiles to accommodate new placements. Drag-and-drop interactions let players grab tiles from the Scrambled Matrix and insert them at any position within Solution Matrix rows.
+Visual feedback systems provide real-time insertion previews through semi-transparent ghost tiles, dotted insertion zones, and smooth animated transitions. When a tile approaches a valid insertion point, the interface displays exactly where the tile will land and how existing tiles will shift to accommodate the insertion.
+Tile shifting mechanics operate on intelligent algorithms that preserve player intent while maintaining grid integrity. Left-side insertions push tiles rightward, right-side insertions shift tiles leftward, and center insertions intelligently choose the shortest path for optimal tile arrangement.
+### Smart Hint System
+The pre-filled central column serves as more than visual guidance—it functions as an intelligent tutoring system. Each central tile represents the optimal color for anchoring its respective palette type, teaching players to identify color relationships through contextual learning rather than explicit instruction.
+Advanced players can enable Relationship Hints that subtly highlight color wheel positions or mathematical relationships between tiles, bridging the gap between gameplay and color theory education. These hints activate on-demand rather than automatically, respecting player autonomy while providing deeper learning opportunities.
+## Visual Design and User Interface
+### Drag-and-Drop Interface Implementation
+Touch target optimization ensures accessibility across devices with minimum 48x48px tile sizes, appropriate spacing for finger-based navigation, and haptic feedback for successful interactions. Visual feedback includes cursor changes, hover states, and clear drop zone indicators that guide players through complex insertion sequences.
+Responsive design principles adapt the interface across screen sizes, maintaining consistent interaction patterns whether players use desktop computers, tablets, or smartphones. Progressive enhancement starts with tap-based interactions and layers on advanced drag-and-drop functionality for devices that support it.
+### Insertion Mechanics Visualization
+Real-time preview systems show exactly where tiles will land during drag operations, using ghost images and animated position indicators. When players drag tiles near insertion points, the interface displays preview animations showing how existing tiles will shift to accommodate new placements.
+Smooth transition animations use 200-300ms ease-in-out effects that feel natural without slowing gameplay pace. Tiles slide smoothly into new positions, creating satisfying physical feedback that reinforces player actions. Cascade effects and chain reactions receive special animation treatment that celebrates player achievements.
+### Accessibility and Inclusive Design
+Multiple interaction methods support diverse player preferences and capabilities. Beyond drag-and-drop, players can use tap-to-select systems, keyboard navigation, or voice commands on supported devices. The interface adapts to player choice rather than forcing specific interaction patterns.
+Can you write code for the basic game play features in above? I want to test a simple game.
+
+
+Core Features:
+1. 5x5 Grid System
+    * Scrambled Matrix: Contains all color tiles randomly distributed
+    * Solution Matrix: Where players reconstruct the correct palettes
+    * Pre-filled center column (column 3) as hints
+2. Five Palette Types
+    * Row 1: Monochromatic (varying lightness of single hue)
+    * Row 2: Analogous (adjacent colors on color wheel)
+    * Row 3: Complementary (opposite colors)
+    * Row 4: Split Complementary (base + two flanking colors)
+    * Row 5: Triadic (three equidistant colors)
+3. Drag-and-Drop Mechanics
+    * Smooth drag-and-drop from scrambled to solution grid
+    * Visual feedback with hover effects and drop zone indicators
+    * Locked center tiles (marked with 🔒) that can't be moved
+4. Insertion-Based Placement
+    * Smart tile shifting when placing in occupied rows
+    * Tiles automatically shift to accommodate new placements
+    * Maintains grid integrity while allowing flexible placement
+5. Game Controls
+    * Check Solution: Validates the current arrangement
+    * Reset Game: Generates new color palettes
+    * Show Hint: Provides helpful tips about color theory
+6. Visual Polish
+    * Smooth animations and transitions
+    * Confetti celebration on successful completion
+    * Responsive design that works on different screen sizes
+    * Color-coded feedback messages
+How to Play:
+1. Drag tiles from the Scrambled Matrix on the left
+2. Drop them into the Solution Matrix on the right
+3. The center column shows key colors for each palette type
+4. Arrange tiles to match the correct color relationships
+5. Click "Check Solution" to verify your arrangement
+The game teaches color theory through hands-on interaction, exactly as specified in your design document. Players learn by experimenting with different color combinations and understanding the relationships between hues, saturation, and lightness.
+
