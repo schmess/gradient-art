@@ -189,6 +189,12 @@ document.addEventListener('DOMContentLoaded', function() {
             hintCountdownInterval = null;
         }
         
+        // Clear any existing affirmation timeout
+        if (affirmationTimeout) {
+            clearTimeout(affirmationTimeout);
+            affirmationTimeout = null;
+        }
+        
         // Reset and start timer
         startTime = new Date();
         if (timerInterval) clearInterval(timerInterval);
@@ -396,8 +402,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Set a timeout to clear the message after 5 seconds
         affirmationTimeout = setTimeout(() => {
-            showRandomAffirmation(true);
+            // Check if the message is currently empty or already showing an affirmation
+            if (messageArea.textContent === "" || en.affirmations.includes(messageArea.textContent)) {
+                showRandomAffirmation(true);
+            }
         }, 5000); // Show for 5 seconds
+    }
+    
+    // Check if message area is empty and show appreciation if needed
+    function checkAndShowAppreciation() {
+        // Only show if the message area is empty and not already showing an affirmation
+        if (messageArea.textContent === "" || messageArea.textContent === en.messages.continueArranging) {
+            showRandomAffirmation(true);
+        }
     }
     
     // Helper function to lighten a color
@@ -484,8 +501,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         }
-
-        console.log({ isMovingWithinSolution })
         
         if (isMovingWithinSolution) {
             // If moving within solution, only allow moves within the same row
@@ -543,6 +558,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     if (newTile.parentNode) {
                         newTile.classList.remove('correct-position');
+                    }
+                    
+                    // After a valid move, check if message area is empty and show appreciation
+                    if (messageArea.textContent === "") {
+                        checkAndShowAppreciation();
                     }
                 }, 500);
             }
@@ -603,6 +623,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     if (newTile.parentNode) {
                         newTile.classList.remove('correct-position');
+                    }
+                    
+                    // After a valid move, check if message area is empty and show appreciation
+                    if (messageArea.textContent === "") {
+                        checkAndShowAppreciation();
                     }
                 }, 500);
             }
@@ -691,6 +716,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         messageArea.textContent = en.messages.continueArranging;
         messageArea.className = 'message-area';
+        
+        // Show a random affirmation after a short delay
+        setTimeout(() => {
+            checkAndShowAppreciation();
+        }, 3000);
     }
     
     // Function to save the current state of the board
@@ -1155,11 +1185,17 @@ document.addEventListener('DOMContentLoaded', function() {
         touchOffsetX = touch.clientX - rect.left;
         touchOffsetY = touch.clientY - rect.top;
         
-        // Create ghost tile for visual feedback
+        // Create ghost tile for visual feedback immediately
         createGhostTile(touch.clientX, touch.clientY);
         
         // Add visual feedback
         touchedTile.style.opacity = '0.4';
+        
+        // Immediately set isTouchMoving to true to allow dragging right away
+        isTouchMoving = true;
+        
+        // Hide lock emojis after first touch
+        hideLockEmojis();
     }
     
     function handleTouchMove(e) {
@@ -1173,33 +1209,45 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const touch = e.touches[0];
         
-        // Move the ghost tile
+        // Move the ghost tile - use performance optimized movement
         moveGhostTile(touch.clientX, touch.clientY);
         
-        // Detect if we're over an empty slot - ensure cross-browser compatibility
-        let elementsAtPoint = [];
-        
-        // Use elementsFromPoint if available, otherwise fall back to elementFromPoint
-        if (document.elementsFromPoint) {
-            elementsAtPoint = document.elementsFromPoint(touch.clientX, touch.clientY);
-        } else if (document.elementFromPoint) {
-            const element = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (element) elementsAtPoint = [element];
-        }
-        
-        const emptySlotElement = elementsAtPoint.find(el => 
-            el.classList && el.classList.contains('empty-slot')
-        );
-        
-        // Reset previous highlighting
-        if (lastTouchedEmpty && lastTouchedEmpty !== emptySlotElement) {
-            lastTouchedEmpty.classList.remove('touch-hover');
-        }
-        
-        // Highlight the current empty slot
-        if (emptySlotElement) {
-            emptySlotElement.classList.add('touch-hover');
-            lastTouchedEmpty = emptySlotElement;
+        // Throttle the slot detection to improve performance
+        // This helps ensure smooth movement even during rapid motion
+        if (!window.touchMoveThrottle) {
+            window.touchMoveThrottle = true;
+            
+            // Use requestAnimationFrame for better performance
+            requestAnimationFrame(() => {
+                // Detect if we're over an empty slot - ensure cross-browser compatibility
+                let elementsAtPoint = [];
+                
+                // Use elementsFromPoint if available, otherwise fall back to elementFromPoint
+                if (document.elementsFromPoint) {
+                    elementsAtPoint = document.elementsFromPoint(touch.clientX, touch.clientY);
+                } else if (document.elementFromPoint) {
+                    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                    if (element) elementsAtPoint = [element];
+                }
+                
+                const emptySlotElement = elementsAtPoint.find(el => 
+                    el.classList && el.classList.contains('empty-slot')
+                );
+                
+                // Reset previous highlighting
+                if (lastTouchedEmpty && lastTouchedEmpty !== emptySlotElement) {
+                    lastTouchedEmpty.classList.remove('touch-hover');
+                }
+                
+                // Highlight the current empty slot
+                if (emptySlotElement) {
+                    emptySlotElement.classList.add('touch-hover');
+                    lastTouchedEmpty = emptySlotElement;
+                }
+                
+                // Reset throttle
+                window.touchMoveThrottle = false;
+            });
         }
     }
     
@@ -1280,19 +1328,24 @@ document.addEventListener('DOMContentLoaded', function() {
         // Position the ghost at the right spot
         moveGhostTile(x, y);
         
-        // Add to document
-        document.body.appendChild(ghostTile);
+        // Add to document with immediate rendering for better performance
+        requestAnimationFrame(() => {
+            document.body.appendChild(ghostTile);
+        });
     }
     
     function moveGhostTile(x, y) {
         if (!ghostTile) return;
         
         // Position the ghost tile centered on the touch point
-        const width = ghostTile.offsetWidth;
-        const height = ghostTile.offsetHeight;
+        // Use transform for better performance instead of left/top
+        const translateX = x - touchOffsetX;
+        const translateY = y - touchOffsetY;
         
-        ghostTile.style.left = (x - touchOffsetX) + 'px';
-        ghostTile.style.top = (y - touchOffsetY) + 'px';
+        // Use requestAnimationFrame for smoother animation
+        requestAnimationFrame(() => {
+            ghostTile.style.transform = `translate3d(${translateX}px, ${translateY}px, 0)`;
+        });
     }
     
     function removeGhostTile() {
