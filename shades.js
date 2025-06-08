@@ -285,17 +285,41 @@ document.addEventListener('DOMContentLoaded', function() {
             sourceSlot.addEventListener('drop', handleDrop);
             draggedTile.parentNode.replaceChild(sourceSlot, draggedTile);
             
+            // Check if the tile is in the correct position within the row
+            const correctPositionInRow = colorPositionInPalette === targetCol;
+            
             // Create a new tile for the target position
             const newTile = createTile(tileColor, targetIndex, 'solution');
             
+            // If the tile is in the wrong position within the row, show visual feedback and count a blunder
+            if (!correctPositionInRow) {
+                // Wrong position - count as blunder
+                blunders++;
+                updateBlunderDisplay();
+                
+                // Visual feedback for wrong position
+                newTile.classList.add('wrong-position');
+                
+                // Show message
+                messageArea.textContent = "Right color, wrong position in the row!";
+                messageArea.className = 'message-area error';
+                
+                // Remove the animation class after it completes
+                setTimeout(() => {
+                    if (newTile.parentNode) { // Check if tile is still in the DOM
+                        newTile.classList.remove('wrong-position');
+                    }
+                }, 500);
+            } else {
+                // Clear any error messages if placement is correct
+                if (messageArea.className.includes('error')) {
+                    messageArea.textContent = "";
+                    messageArea.className = 'message-area';
+                }
+            }
+            
             // Replace the empty slot with the new tile
             this.parentNode.replaceChild(newTile, this);
-            
-            // Clear any error messages
-            if (messageArea.className.includes('error')) {
-                messageArea.textContent = "";
-                messageArea.className = 'message-area';
-            }
         } else {
             // Coming from scrambled matrix
             
@@ -330,21 +354,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // The color is in the correct palette - place it in the exact position where it was dropped
+            // Check if the tile is in the correct position within the row
+            const correctPositionInRow = colorPositionInPalette === targetCol;
+            
             // Create a new tile for the solution matrix
             const newTile = createTile(tileColor, targetIndex, 'solution');
+            
+            // If the tile is in the wrong position within the row, show visual feedback and count a blunder
+            if (!correctPositionInRow) {
+                // Wrong position - count as blunder
+                blunders++;
+                updateBlunderDisplay();
+                
+                // Visual feedback for wrong position
+                newTile.classList.add('wrong-position');
+                
+                // Show message
+                messageArea.textContent = "Right color, wrong position in the row!";
+                messageArea.className = 'message-area error';
+                
+                // Remove the animation class after it completes
+                setTimeout(() => {
+                    if (newTile.parentNode) { // Check if tile is still in the DOM
+                        newTile.classList.remove('wrong-position');
+                    }
+                }, 500);
+            } else {
+                // Clear any error messages if placement is correct
+                if (messageArea.className.includes('error')) {
+                    messageArea.textContent = "";
+                    messageArea.className = 'message-area';
+                }
+            }
             
             // Replace the empty slot with the new tile
             this.parentNode.replaceChild(newTile, this);
             
             // Remove the dragged tile from scrambled matrix
             draggedTile.parentNode.removeChild(draggedTile);
-            
-            // Clear any error messages
-            if (messageArea.className.includes('error')) {
-                messageArea.textContent = "";
-                messageArea.className = 'message-area';
-            }
         }
         
         // Update active tiles

@@ -293,6 +293,18 @@ button:active {
     border: 2px solid var(--error);
 }
 
+/* Animation for tiles placed in correct row but wrong position */
+@keyframes wrongPosition {
+    0% { transform: scale(1); box-shadow: 0 0 0 rgba(244, 67, 54, 0.5); }
+    50% { transform: scale(1.05); box-shadow: 0 0 10px rgba(244, 67, 54, 0.8); }
+    100% { transform: scale(1); box-shadow: 0 0 0 rgba(244, 67, 54, 0.5); }
+}
+
+.wrong-position {
+    animation: wrongPosition 0.5s;
+    border: 2px solid var(--error);
+}
+
 .game-info {
     background-color: white;
     border-radius: 8px;
