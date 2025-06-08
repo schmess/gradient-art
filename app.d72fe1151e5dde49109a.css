@@ -115,17 +115,6 @@ h1 {
     height: min(40vw, 70vh);
 }
 
-@media (max-width: 768px) and (orientation: landscape) {
-    .matrix-container {
-        padding: 5px;
-        margin: 0;
-        max-width: 30vw;
-        min-width: 30vw;
-        width: 30vw;
-        height: 30vw;
-    }
-}
-
 .matrix {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -135,6 +124,16 @@ h1 {
     width: 100%;
     min-height: fit-content;
     position: relative;
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+    .matrix-container {
+        padding: 5px;
+        margin: 0;
+        height: 70vh;
+        max-width: 70vh;
+        max-width: 45%;
+    }
 }
 
 .row-label {
