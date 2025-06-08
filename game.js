@@ -3,6 +3,36 @@ const en = window.en;
 document.addEventListener('DOMContentLoaded', function() {
     // Use en global variable from en.js (loaded in HTML before this file)
     
+    // Check device orientation and add event listener to detect orientation changes
+    const orientationOverlay = document.querySelector('.orientation-overlay');
+    const gameContainer = document.querySelector('.game-container');
+    
+    function checkOrientation() {
+        // Only apply to mobile devices (screen width less than 768px)
+        if (window.innerWidth <= 768) {
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                // Portrait mode - show overlay
+                orientationOverlay.style.display = 'flex';
+                gameContainer.style.visibility = 'hidden';
+            } else {
+                // Landscape mode - hide overlay
+                orientationOverlay.style.display = 'none';
+                gameContainer.style.visibility = 'visible';
+            }
+        } else {
+            // Desktop/tablet in landscape - always show game
+            orientationOverlay.style.display = 'none';
+            gameContainer.style.visibility = 'visible';
+        }
+    }
+    
+    // Initial check
+    checkOrientation();
+    
+    // Add event listener for orientation changes
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    
     // Game puzzle configuration in a single data structure
     const puzzleData = {
         // Palette types for each row (in order)
@@ -99,6 +129,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize game
     function initGame() {
+        console.clear(); // Clear console for clean debugging
+        console.log('==== Initializing The Gradient Artist Game ====');
+        
         // Clear matrices
         scrambledMatrix.innerHTML = '';
         solutionMatrix.innerHTML = '';
@@ -134,14 +167,55 @@ document.addEventListener('DOMContentLoaded', function() {
         solutionVisible = false;
         firstMoveMade = false;
         
-        // Create all color tiles for scrambled matrix
+        // Create color pool for scrambled matrix, excluding locked colors
+        // First collect all colors from all palettes
         const allColors = [];
         puzzleData.paletteTypes.forEach(type => {
             allColors.push(...puzzleData.palettes[type]);
         });
         
-        // Create scrambled tiles
-        const scrambledColors = [...allColors].sort(() => Math.random() - 0.5);
+        // Identify locked colors to remove from the scrambled pool
+        const lockedColors = [];
+        for (let row = 0; row < puzzleData.lockedTiles.length; row++) {
+            const paletteType = puzzleData.paletteTypes[row];
+            const palette = puzzleData.palettes[paletteType];
+            
+            for (let col = 0; col < puzzleData.lockedTiles[row].length; col++) {
+                if (puzzleData.lockedTiles[row][col]) {
+                    // This is a locked position - add its color to our exclusion list
+                    lockedColors.push(palette[col]);
+                }
+            }
+        }
+        
+        // Count occurrences of each locked color
+        const lockedColorCounts = {};
+        for (const color of lockedColors) {
+            lockedColorCounts[color] = (lockedColorCounts[color] || 0) + 1;
+        }
+        
+        console.log('Locked color occurrences:', lockedColorCounts);
+        
+        // Create filtered color pool, removing exactly the right number of each locked color
+        const colorPool = [...allColors];
+        console.log('Initial color pool size:', colorPool.length);
+        
+        for (const lockedColor in lockedColorCounts) {
+            let remainingToRemove = lockedColorCounts[lockedColor];
+            
+            // Remove each locked color the exact number of times it appears locked
+            for (let i = colorPool.length - 1; i >= 0 && remainingToRemove > 0; i--) {
+                if (colorPool[i] === lockedColor) {
+                    colorPool.splice(i, 1);
+                    remainingToRemove--;
+                }
+            }
+        }
+        
+        console.log('Filtered color pool size:', colorPool.length);
+        
+        // Create scrambled tiles from the filtered pool
+        const scrambledColors = [...colorPool].sort(() => Math.random() - 0.5);
         scrambledColors.forEach((color, index) => {
             const tile = createTile(color, index, 'scrambled');
             tile.dataset.originalIndex = index; // Store original position
@@ -153,6 +227,24 @@ document.addEventListener('DOMContentLoaded', function() {
             const rowLockPattern = puzzleData.lockedTiles[row];
             const paletteType = puzzleData.paletteTypes[row];
             const palette = puzzleData.palettes[paletteType];
+            
+            // Track how many available colors remain for each row
+            // This ensures we maintain the correct balance of colors for each palette
+            const rowAvailableColors = {};
+            for (const color of palette) {
+                rowAvailableColors[color] = (rowAvailableColors[color] || 0) + 1;
+            }
+            
+            // Subtract locked tiles from available count
+            for (let col = 0; col < rowLockPattern.length; col++) {
+                if (rowLockPattern[col]) {
+                    const lockedColor = palette[col];
+                    rowAvailableColors[lockedColor]--;
+                }
+            }
+            
+            // For debugging - log available colors for each row
+            console.log(`Row ${row} (${paletteType}) available colors:`, rowAvailableColors);
             
             for (let col = 0; col < rowLockPattern.length; col++) {
                 // Calculate the index in a 5x5 grid
@@ -169,6 +261,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     const emptySlot = document.createElement('div');
                     emptySlot.className = 'tile empty-slot';
                     emptySlot.dataset.index = index;
+                    
+                    // Store the palette type in the dataset to help with validation
+                    emptySlot.dataset.paletteType = paletteType;
+                    emptySlot.dataset.rowIndex = row;
+                    emptySlot.dataset.colIndex = col;
+                    
                     emptySlot.addEventListener('dragover', handleDragOver);
                     emptySlot.addEventListener('drop', handleDrop);
                     solutionMatrix.appendChild(emptySlot);
@@ -320,6 +418,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const colorInPalette = correctPalette.includes(tileColor);
         const colorPositionInPalette = correctPalette.indexOf(tileColor);
         
+        // Get additional information from the dataset
+        const targetPaletteType = this.dataset.paletteType;
+        
         // Check if we're moving from the solution matrix or the scrambled matrix
         const isMovingWithinSolution = draggedTile.dataset.sourceMatrix === 'solution';
         
@@ -335,45 +436,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         }
-        
-        // Check for duplicate color in the row (except for the one we're moving)
-        const hasDuplicate = rowTiles.some(tile => 
-            tile.color === tileColor && 
-            (!isMovingWithinSolution || (isMovingWithinSolution && parseInt(draggedTile.dataset.index) !== tile.index))
-        );
-        
-        // If there's a duplicate and this isn't the tile we're moving within the row, show error
-        if (hasDuplicate) {
-            // Duplicate color - count as blunder
-            blunders++;
-            updateBlunderDisplay();
-            
-            // Visual feedback for error
-            const tempTile = createTile(tileColor, targetIndex, 'solution');
-            tempTile.classList.add('shake');
-            
-            // Temporarily show the tile in the wrong position with shake animation
-            this.parentNode.replaceChild(tempTile, this);
-            
-            // After animation, restore empty slot
-            setTimeout(() => {
-                const newEmptySlot = document.createElement('div');
-                newEmptySlot.className = 'tile empty-slot';
-                newEmptySlot.dataset.index = targetIndex;
-                newEmptySlot.addEventListener('dragover', handleDragOver);
-                newEmptySlot.addEventListener('drop', handleDrop);
-                
-                tempTile.parentNode.replaceChild(newEmptySlot, tempTile);
-                if (draggedTile) {
-                    draggedTile.style.opacity = '1';
-                }
-            }, 500);
-            
-            messageArea.textContent = en.messages.duplicateColor;
-            messageArea.className = 'message-area error';
-            
-            return;
-        }
+
+        console.log({ isMovingWithinSolution })
         
         if (isMovingWithinSolution) {
             // If moving within solution, only allow moves within the same row
@@ -384,34 +448,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Cannot move between rows - count as blunder
                 blunders++;
                 updateBlunderDisplay();
-                
                 // Visual feedback for error
                 const tempTile = createTile(tileColor, targetIndex, 'solution');
                 tempTile.classList.add('shake');
-                
-                // Temporarily show the tile in the wrong position with shake animation
                 this.parentNode.replaceChild(tempTile, this);
-                
-                // After animation, restore empty slot
                 setTimeout(() => {
                     const newEmptySlot = document.createElement('div');
                     newEmptySlot.className = 'tile empty-slot';
                     newEmptySlot.dataset.index = targetIndex;
                     newEmptySlot.addEventListener('dragover', handleDragOver);
                     newEmptySlot.addEventListener('drop', handleDrop);
-                    
                     tempTile.parentNode.replaceChild(newEmptySlot, tempTile);
                     if (draggedTile) {
                         draggedTile.style.opacity = '1';
                     }
                 }, 500);
-                
                 messageArea.textContent = en.messages.sameRowOnly;
                 messageArea.className = 'message-area error';
-                
                 return;
             }
-            
             // Remove the original tile from its position
             const sourceSlot = document.createElement('div');
             sourceSlot.className = 'tile empty-slot';
@@ -419,130 +474,90 @@ document.addEventListener('DOMContentLoaded', function() {
             sourceSlot.addEventListener('dragover', handleDragOver);
             sourceSlot.addEventListener('drop', handleDrop);
             draggedTile.parentNode.replaceChild(sourceSlot, draggedTile);
-            
-            // Check if the tile is in the correct position within the row
-            const correctPositionInRow = colorPositionInPalette === targetCol;
-            
-            // Create a new tile for the target position
+            // Place the new tile in the target position
             const newTile = createTile(tileColor, targetIndex, 'solution');
-            
-            // If the tile is in the wrong position within the row, show visual feedback and count a blunder
-            if (!correctPositionInRow) {
-                // Wrong position - count as blunder
+            this.parentNode.replaceChild(newTile, this);
+            // Now check if the row is valid after the move
+            if (!isRowValidAfterDrop(targetRow)) {
                 blunders++;
                 updateBlunderDisplay();
-                
-                // Visual feedback for wrong position
                 newTile.classList.add('wrong-position');
-                
-                // Show message
                 messageArea.textContent = en.messages.wrongPosition;
                 messageArea.className = 'message-area error';
-                
-                // Remove the animation class after it completes
                 setTimeout(() => {
-                    if (newTile.parentNode) { // Check if tile is still in the DOM
+                    if (newTile.parentNode) {
                         newTile.classList.remove('wrong-position');
                     }
                 }, 500);
             } else {
-                // Correct position - show positive feedback
                 newTile.classList.add('correct-position');
-                
-                // Show a random affirmation
                 showRandomAffirmation();
-                
-                // Remove the animation class after it completes
                 setTimeout(() => {
-                    if (newTile.parentNode) { // Check if tile is still in the DOM
+                    if (newTile.parentNode) {
                         newTile.classList.remove('correct-position');
                     }
                 }, 500);
             }
-            
-            // Replace the empty slot with the new tile
-            this.parentNode.replaceChild(newTile, this);
         } else {
             // Coming from scrambled matrix
-            
-            // Only allow placement in correct row
             if (!colorInPalette) {
-                // Incorrect row - count as blunder
                 blunders++;
                 updateBlunderDisplay();
-                
-                // Visual feedback for error
                 const tempTile = createTile(tileColor, targetIndex, 'solution');
                 tempTile.classList.add('shake');
-                
-                // Temporarily show the tile in the wrong position with shake animation
                 this.parentNode.replaceChild(tempTile, this);
-                
-                // After animation, restore empty slot and return tile to scrambled matrix
                 setTimeout(() => {
                     const newEmptySlot = document.createElement('div');
                     newEmptySlot.className = 'tile empty-slot';
                     newEmptySlot.dataset.index = targetIndex;
                     newEmptySlot.addEventListener('dragover', handleDragOver);
                     newEmptySlot.addEventListener('drop', handleDrop);
-                    
                     tempTile.parentNode.replaceChild(newEmptySlot, tempTile);
                     if (draggedTile) {
                         draggedTile.style.opacity = '1';
                     }
                 }, 500);
-                
                 messageArea.textContent = en.messages.wrongRow;
                 messageArea.className = 'message-area error';
-                
                 return;
             }
-            
-            // Check if the tile is in the correct position within the row
-            const correctPositionInRow = colorPositionInPalette === targetCol;
-            
-            // Create a new tile for the solution matrix
+            // Place the new tile in the target position
             const newTile = createTile(tileColor, targetIndex, 'solution');
-            
-            // If the tile is in the wrong position within the row, show visual feedback and count a blunder
-            if (!correctPositionInRow) {
-                // Wrong position - count as blunder
+            this.parentNode.replaceChild(newTile, this);
+            // Remove the dragged tile from scrambled matrix
+            draggedTile.parentNode.removeChild(draggedTile);
+            // Now check if the row is valid after the move
+            if (!isRowValidAfterDrop(targetRow)) {
+                // Blunder and revert the move
                 blunders++;
                 updateBlunderDisplay();
-                
-                // Visual feedback for wrong position
-                newTile.classList.add('wrong-position');
-                
-                // Show message
+                newTile.classList.add('shake');
+                setTimeout(() => {
+                    // Remove the tile and restore empty slot
+                    const newEmptySlot = document.createElement('div');
+                    newEmptySlot.className = 'tile empty-slot';
+                    newEmptySlot.dataset.index = targetIndex;
+                    newEmptySlot.addEventListener('dragover', handleDragOver);
+                    newEmptySlot.addEventListener('drop', handleDrop);
+                    if (newTile.parentNode) {
+                        newTile.parentNode.replaceChild(newEmptySlot, newTile);
+                    }
+                    // Return a new tile to scrambled matrix
+                    const scrambledTile = createTile(tileColor, scrambledMatrix.children.length, 'scrambled');
+                    scrambledMatrix.appendChild(scrambledTile);
+                }, 500);
                 messageArea.textContent = en.messages.wrongPosition;
                 messageArea.className = 'message-area error';
-                
-                // Remove the animation class after it completes
-                setTimeout(() => {
-                    if (newTile.parentNode) { // Check if tile is still in the DOM
-                        newTile.classList.remove('wrong-position');
-                    }
-                }, 500);
+                return;
             } else {
-                // Correct position - show positive feedback
                 newTile.classList.add('correct-position');
-                
-                // Show a random affirmation
                 showRandomAffirmation();
-                
-                // Remove the animation class after it completes
                 setTimeout(() => {
-                    if (newTile.parentNode) { // Check if tile is still in the DOM
+                    if (newTile.parentNode) {
                         newTile.classList.remove('correct-position');
                     }
                 }, 500);
             }
-            
-            // Replace the empty slot with the new tile
-            this.parentNode.replaceChild(newTile, this);
-            
-            // Remove the dragged tile from scrambled matrix
-            draggedTile.parentNode.removeChild(draggedTile);
         }
         
         // Update active tiles
@@ -714,14 +729,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Function to verify if the solution is correct
+    // Function to verify if the solution is correct using brute force comparison
     function verifySolution() {
+        console.log('==== Verifying Solution ====');
         let allCorrect = true;
         
         // Check each row
         for (let row = 0; row < puzzleData.paletteTypes.length; row++) {
             const paletteType = puzzleData.paletteTypes[row];
             const correctPalette = puzzleData.palettes[paletteType];
+            console.log(`Checking row ${row} (${paletteType})`);
             
             // Get the tiles in this row
             const rowTiles = [];
@@ -739,30 +756,59 @@ document.addEventListener('DOMContentLoaded', function() {
                 continue;
             }
             
-            // Check if colors match the correct palette (order doesn't matter)
+            // Get colors from the current row
             const rowColors = rowTiles.map(tile => tile.dataset.color);
             
-            // Create a frequency map of colors
+            // Create a frequency map for both expected and actual colors
             const correctColorCounts = {};
             const rowColorCounts = {};
             
+            // Count occurrences of colors in the correct palette
             for (const color of correctPalette) {
                 correctColorCounts[color] = (correctColorCounts[color] || 0) + 1;
             }
             
+            // Count occurrences of colors in the current row
             for (const color of rowColors) {
                 rowColorCounts[color] = (rowColorCounts[color] || 0) + 1;
             }
             
-            // Check if both maps have the same keys and values
-            const colorsMatch = Object.keys(correctColorCounts).length === Object.keys(rowColorCounts).length &&
-                Object.keys(correctColorCounts).every(key => 
-                    correctColorCounts[key] === rowColorCounts[key]
-                );
+            // Check for missing or extra colors
+            const correctKeys = Object.keys(correctColorCounts);
+            const rowKeys = Object.keys(rowColorCounts);
             
-            if (!colorsMatch) {
+            console.log(`  Expected colors: ${JSON.stringify(correctColorCounts)}`);
+            console.log(`  Actual colors: ${JSON.stringify(rowColorCounts)}`);
+            
+            // First check: make sure we have exactly the same color keys
+            if (correctKeys.length !== rowKeys.length) {
+                console.log('  ❌ Wrong number of unique colors');
                 allCorrect = false;
+                continue;
             }
+            
+            // Second check: make sure all expected colors are present
+            const allKeysPresent = correctKeys.every(key => rowKeys.includes(key));
+            if (!allKeysPresent) {
+                console.log('  ❌ Missing some expected colors');
+                allCorrect = false;
+                continue;
+            }
+            
+            // Third check: make sure each color appears exactly the right number of times
+            const exactColorMatches = correctKeys.every(key => 
+                correctColorCounts[key] === rowColorCounts[key]
+            );
+            
+            if (!exactColorMatches) {
+                console.log('  ❌ Wrong number of occurrences for some colors');
+                allCorrect = false;
+                continue;
+            }
+            
+            console.log('  ✅ Row is correct!');
+            
+            // If needed, check color positions here (currently not required as per game rules)
         }
         
         if (allCorrect) {
@@ -935,7 +981,40 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Function to toggle palette type visibility - Removed
+    // Helper to check if a row's colors are valid compared to the solution row
+    function isRowValidAfterDrop(rowIndex) {
+        // Get the correct palette for this row
+        const paletteType = puzzleData.paletteTypes[rowIndex];
+        const correctPalette = puzzleData.palettes[paletteType];
+        // Build color count for the solution row
+        const solutionColorCounts = {};
+        for (const color of correctPalette) {
+            solutionColorCounts[color] = (solutionColorCounts[color] || 0) + 1;
+        }
+        // Build color count for the current row (post-drop)
+        const currentColorCounts = {};
+        for (let col = 0; col < 5; col++) {
+            const index = rowIndex * 5 + col;
+            const tile = solutionMatrix.querySelector(`.tile[data-index="${index}"]:not(.empty-slot)`);
+            if (tile) {
+                const color = tile.dataset.color;
+                currentColorCounts[color] = (currentColorCounts[color] || 0) + 1;
+            }
+        }
+        // 1. All colors in current row must be in solution row
+        for (const color in currentColorCounts) {
+            if (!(color in solutionColorCounts)) {
+                return false;
+            }
+        }
+        // 2. No color in current row can exceed its count in solution row
+        for (const color in currentColorCounts) {
+            if (currentColorCounts[color] > solutionColorCounts[color]) {
+                return false;
+            }
+        }
+        return true;
+    }
     
     // Event listeners
     checkButton.addEventListener('click', checkSolution);
