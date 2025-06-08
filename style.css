@@ -688,3 +688,7 @@ button:active {
         visibility: hidden;
     }
 }
+
+#score-modal {
+    display: none;
+}

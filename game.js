@@ -1128,7 +1128,18 @@ document.addEventListener('DOMContentLoaded', function() {
     checkButton.addEventListener('click', checkSolution);
     hintButton.addEventListener('click', showHint);
     resetButton.addEventListener('click', initGame);
+
+    // Add event listener for the hidden finish button
+    const finishButton = document.getElementById('finish-button');
+    if (finishButton) {
+        finishButton.addEventListener('click', function() {
+            showSuccess();
+        });
+    }
     
     // Initialize the game
     initGame();
+
+    // Expose showSuccess for the finish button
+    window.showSuccess = showSuccess;
 });
