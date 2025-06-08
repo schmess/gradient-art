@@ -542,6 +542,143 @@ button:active {
     100% { transform: rotate(0deg); }
 }
 
+/* Score Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: linear-gradient(135deg, var(--dark), var(--darker));
+    border-radius: 12px;
+    padding: 30px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    border: 2px solid var(--accent);
+    animation: modalFadeIn 0.5s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.modal-content h2 {
+    color: var(--accent);
+    margin-bottom: 20px;
+    font-size: 2rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.final-score {
+    font-size: 4rem;
+    font-weight: bold;
+    color: var(--text-light);
+    margin: 20px 0;
+    text-shadow: 0 0 10px var(--accent);
+    animation: scoreGlow 2s infinite alternate;
+}
+
+@keyframes scoreGlow {
+    from { text-shadow: 0 0 10px var(--accent); }
+    to { text-shadow: 0 0 20px var(--accent), 0 0 30px var(--accent-dark); }
+}
+
+.score-breakdown {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.score-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.score-row:last-child {
+    border-bottom: none;
+}
+
+.score-label {
+    color: var(--text-light);
+    font-weight: bold;
+    text-align: left;
+}
+
+.score-value {
+    color: var(--accent);
+    font-weight: bold;
+}
+
+.score-stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+
+.score-stat {
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 10px 15px;
+    flex: 1;
+    margin: 0 5px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.score-stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-light);
+    margin-bottom: 5px;
+}
+
+.score-stat-label {
+    font-size: 0.9rem;
+    color: var(--accent);
+}
+
+.play-again {
+    background-color: var(--accent);
+    color: var(--darker);
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.play-again:hover {
+    background-color: var(--accent-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.play-again:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
 @media screen and (max-width: 768px) and (orientation: portrait) {
     .orientation-overlay {
         display: flex;

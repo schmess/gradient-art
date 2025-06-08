@@ -14,6 +14,50 @@
     </div>
 
     <div id="message" class="message-area"></div>
+    
+    <!-- Score Modal -->
+    <div id="score-modal" class="modal">
+        <div class="modal-content">
+            <h2>🏆 Your Score 🏆</h2>
+            <div class="final-score">0</div>
+            
+            <div class="score-breakdown">
+                <div class="score-row">
+                    <div class="score-label">Base Score:</div>
+                    <div class="score-value base-score">1000</div>
+                </div>
+                <div class="score-row">
+                    <div class="score-label">Time Bonus:</div>
+                    <div class="score-value time-bonus">+0</div>
+                </div>
+                <div class="score-row">
+                    <div class="score-label">Blunder Penalty:</div>
+                    <div class="score-value blunder-penalty">-0</div>
+                </div>
+                <div class="score-row">
+                    <div class="score-label">Hint Penalty:</div>
+                    <div class="score-value hint-penalty">-0</div>
+                </div>
+            </div>
+            
+            <div class="score-stats">
+                <div class="score-stat">
+                    <div class="score-stat-value time-value">00:00</div>
+                    <div class="score-stat-label">Time</div>
+                </div>
+                <div class="score-stat">
+                    <div class="score-stat-value blunders-value">0</div>
+                    <div class="score-stat-label">Attempts</div>
+                </div>
+                <div class="score-stat">
+                    <div class="score-stat-value hints-value">0</div>
+                    <div class="score-stat-label">Inspirations</div>
+                </div>
+            </div>
+            
+            <button id="play-again-button" class="play-again">Play Again</button>
+        </div>
+    </div>
 
     <div class="game-container">
         <div class="matrix-container">
