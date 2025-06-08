@@ -4,7 +4,7 @@
   "description": "A browser-based puzzle game that teaches color theory through interactive gameplay",
   "main": "the-gradient-artist.js",
   "scripts": {
-    "deploy": "gh-pages -d ./ --cname thegradientartist.com",
+    "deploy": "gh-pages -d ./",
     "start": "npx http-server -o"
   },
   "author": "Naval Saini",
