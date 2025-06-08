@@ -20,8 +20,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let draggedTile = null;
     let activeTiles = [];
     let blunders = 0;
+    let hintsUsed = 0; // Track how many times hints were used
     let startTime = null;
     let timerInterval = null;
+    let hintCountdownInterval = null;
     let solutionVisible = false; // Track if solution is currently shown
     let paletteTypesVisible = false; // Track if palette types are visible
     
@@ -35,7 +37,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Reset game stats
         blunders = 0;
+        hintsUsed = 0;
         updateBlunderDisplay();
+        updateHintsDisplay();
+        
+        // Reset hint button
+        hintButton.textContent = "Show Hint";
+        hintButton.disabled = false;
+        
+        // Clear any active hint countdown
+        if (hintCountdownInterval) {
+            clearInterval(hintCountdownInterval);
+            hintCountdownInterval = null;
+        }
         
         // Reset and start timer
         startTime = new Date();
@@ -643,6 +657,12 @@ document.addEventListener('DOMContentLoaded', function() {
         blunderDisplay.textContent = blunders;
     }
     
+    // Update the hints display
+    function updateHintsDisplay() {
+        const hintsDisplay = document.getElementById('hints-value');
+        hintsDisplay.textContent = hintsUsed;
+    }
+    
     // Update the timer display
     function updateTimer() {
         if (!startTime) return;
@@ -670,7 +690,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const minutes = Math.floor(elapsedSeconds / 60);
         const seconds = elapsedSeconds % 60;
         
-        messageArea.textContent = `🎉 Congratulations! You solved it in ${minutes}m ${seconds}s with ${blunders} blunders!`;
+        messageArea.textContent = `🎉 Congratulations! You solved it in ${minutes}m ${seconds}s with ${blunders} blunders and ${hintsUsed} hints used!`;
         messageArea.className = 'message-area success';
         
         // Add celebration animation
@@ -684,109 +704,89 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Show hint
     function showHint() {
-        // Find the three rows with the fewest tiles placed
-        const rowCompletion = [0, 0, 0, 0, 0]; // Track how many tiles are placed in each row
+        // Increment hints used counter
+        hintsUsed++;
+        updateHintsDisplay();
         
-        // Count placed tiles in each row (excluding the locked center tile)
+        // Disable the hint button while the countdown is active
+        hintButton.disabled = true;
+        
+        // Find all tiles that are placed in the wrong position
+        let misplacedTilesFound = 0;
+        
         for (let row = 0; row < 5; row++) {
+            const paletteType = Object.keys(palettes)[row];
+            const correctPalette = palettes[paletteType];
+            
+            // Check each tile in this row
             for (let col = 0; col < 5; col++) {
-                if (col === 2) continue; // Skip center column (it's always filled)
+                // Skip center column (locked tiles)
+                if (col === 2) continue;
                 
                 const index = row * 5 + col;
                 const tile = solutionMatrix.querySelector(`.tile[data-index="${index}"]:not(.empty-slot)`);
                 
+                // If there's a tile in this position
                 if (tile && !tile.classList.contains('empty-slot')) {
-                    rowCompletion[row]++;
+                    const tileColor = tile.dataset.color;
+                    
+                    // Check if the color belongs to this palette
+                    if (correctPalette.includes(tileColor)) {
+                        // Check if it's in the correct position
+                        const correctPosition = correctPalette.indexOf(tileColor);
+                        
+                        if (correctPosition !== col) {
+                            // This tile is in the wrong position
+                            tile.classList.add('wrong-position');
+                            misplacedTilesFound++;
+                        }
+                    }
                 }
             }
         }
         
-        // Find the three rows with the least completion
-        const rowIndices = [0, 1, 2, 3, 4];
-        rowIndices.sort((a, b) => rowCompletion[a] - rowCompletion[b]);
-        const rowsNeedingHelp = rowIndices.slice(0, 3);
-        
-        // Text hints based on which rows need help
-        const hintMessages = {
-            0: "Monochromatic palettes show different brightness levels of the same color.",
-            1: "Analogous palettes contain colors that are next to each other on the color wheel.",
-            2: "Complementary palettes use colors from opposite sides of the color wheel.",
-            3: "Split complementary palettes use a color and two colors adjacent to its complement.",
-            4: "Triadic palettes use three colors evenly spaced around the color wheel."
-        };
-        
-        // Choose one of the rows needing help and give specific hint
-        const focusRow = rowsNeedingHelp[0];
-        const paletteType = Object.keys(palettes)[focusRow];
-        const palette = palettes[paletteType];
-        
-        // Find an empty slot to suggest a tile for
-        let suggestedCol = -1;
-        let suggestedColor = null;
-        
-        // First check if columns 0 and 1 are empty
-        for (let col of [0, 1]) {
-            const index = focusRow * 5 + col;
-            const tile = solutionMatrix.querySelector(`.tile[data-index="${index}"]:not(.empty-slot)`);
-            
-            if (!tile || tile.classList.contains('empty-slot')) {
-                suggestedCol = col;
-                suggestedColor = palette[col];
-                break;
-            }
-        }
-        
-        // If columns 0 and 1 are filled, check columns 3 and 4
-        if (suggestedCol === -1) {
-            for (let col of [3, 4]) {
-                const index = focusRow * 5 + col;
-                const tile = solutionMatrix.querySelector(`.tile[data-index="${index}"]:not(.empty-slot)`);
-                
-                if (!tile || tile.classList.contains('empty-slot')) {
-                    suggestedCol = col;
-                    suggestedColor = palette[col];
-                    break;
-                }
-            }
-        }
-        
-        // Highlight the color in scrambled matrix
-        let highlightedTile = null;
-        if (suggestedColor) {
-            const scrambledTiles = scrambledMatrix.querySelectorAll('.tile');
-            
-            for (const tile of scrambledTiles) {
-                if (tile.dataset.color === suggestedColor) {
-                    // Add highlighting to this tile
-                    tile.style.boxShadow = '0 0 15px gold, 0 0 8px gold';
-                    tile.style.transform = 'scale(1.1)';
-                    highlightedTile = tile;
-                    break;
-                }
-            }
-        }
-        
-        // Remove highlighting after 3 seconds
-        if (highlightedTile) {
-            setTimeout(() => {
-                if (highlightedTile.parentNode) { // Check if the tile is still in the DOM
-                    highlightedTile.style.boxShadow = '';
-                    highlightedTile.style.transform = '';
-                }
-            }, 3000);
-        }
-        
-        // Generate message for the rows that need help
-        let hintText = '💡 Hint: Focus on these rows: ';
-        rowsNeedingHelp.forEach((rowIndex, i) => {
-            hintText += `Row ${rowIndex + 1} (${hintMessages[rowIndex].split(' ')[0]})`;
-            if (i < rowsNeedingHelp.length - 1) {
-                hintText += ', ';
-            }
-        });
-        
-        messageArea.textContent = hintText;
+        // Show message
+        messageArea.textContent = "💡 Showing all tiles incorrectly placed within the palette";
         messageArea.className = 'message-area hint';
+        
+        // Start countdown from 10 seconds
+        let countdownTime = 10;
+        
+        // Update button text with countdown
+        hintButton.textContent = `Hint (${countdownTime}s)`;
+        
+        // Clear any existing countdown
+        if (hintCountdownInterval) {
+            clearInterval(hintCountdownInterval);
+        }
+        
+        // Set up countdown interval
+        hintCountdownInterval = setInterval(() => {
+            countdownTime--;
+            
+            // Update button text
+            hintButton.textContent = `Hint (${countdownTime}s)`;
+            
+            // When countdown reaches 0
+            if (countdownTime <= 0) {
+                // Clear the interval
+                clearInterval(hintCountdownInterval);
+                
+                // Remove highlighting from all tiles
+                const allTiles = solutionMatrix.querySelectorAll('.tile');
+                allTiles.forEach(tile => {
+                    tile.classList.remove('wrong-position');
+                });
+                
+                // Reset button text and enable it
+                hintButton.textContent = "Show Hint";
+                hintButton.disabled = false;
+                
+                // Clear message
+                messageArea.textContent = "";
+                messageArea.className = 'message-area';
+            }
+        }, 1000);
     }
     
     // Add a method to verify the solution and show a success message when correct
