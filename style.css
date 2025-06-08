@@ -108,10 +108,13 @@ h1 {
     -webkit-backdrop-filter: blur(5px);
     position: relative;
     border: 1px solid rgba(255, 255, 255, 0.3);
-    max-width: 40vw;
-    min-width: 40vw;
-    min-height: 40vw;
-    max-height: 40vw;
+    aspect-ratio: 1/1;
+    max-width: min(40vw, 70vh);
+    min-width: min(40vw, 70vh);
+    width: min(40vw, 70vh);
+    min-height: min(40vw, 70vh);
+    max-height: min(40vw, 70vh);
+    height: min(40vw, 70vh);
 }
 
 .matrix {
