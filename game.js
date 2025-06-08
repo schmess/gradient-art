@@ -112,6 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let solutionVisible = false; // Track if solution is currently shown
     let firstMoveMade = false; // Track if the first move has been made
     let affirmationTimeout = null; // Track the timeout for clearing affirmations
+    let finalScore = 0; // Track the final score
     
     // Colors for affirmation messages (purple and pink palette)
     const affirmationColors = [
@@ -131,6 +132,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function initGame() {
         console.clear(); // Clear console for clean debugging
         console.log('==== Initializing The Gradient Artist Game ====');
+        
+        // Hide score modal if it's open
+        hideScoreModal();
         
         // Clear matrices
         scrambledMatrix.innerHTML = '';
@@ -855,7 +859,46 @@ document.addEventListener('DOMContentLoaded', function() {
         timerDisplay.textContent = `${minutes}:${seconds}`;
     }
     
-    // Show success message
+    // Calculate score based on time, blunders and hints
+    function calculateScore(timeInSeconds, blunders, hintsUsed) {
+        console.log('Calculating score with:', { timeInSeconds, blunders, hintsUsed });
+        
+        // Base score - everyone starts with 1000 points
+        const baseScore = 1000;
+        
+        // Time bonus - faster completion gives more points
+        // Maximum time bonus for completing in 60 seconds or less
+        const maxTimeBonus = 500;
+        const timeBonus = Math.max(0, maxTimeBonus - Math.floor(timeInSeconds / 10));
+        
+        // Penalties
+        const blunderPenalty = blunders * 25; // Each blunder costs 25 points
+        const hintPenalty = hintsUsed * 50;   // Each hint costs 50 points
+        
+        // Calculate final score
+        const score = Math.max(0, baseScore + timeBonus - blunderPenalty - hintPenalty);
+        
+        console.log('Score breakdown:', {
+            baseScore,
+            timeBonus,
+            blunderPenalty,
+            hintPenalty,
+            finalScore: score
+        });
+        
+        return {
+            total: score,
+            baseScore,
+            timeBonus,
+            blunderPenalty,
+            hintPenalty,
+            timeInSeconds,
+            blunders,
+            hintsUsed
+        };
+    }
+    
+    // Show success message and score
     function showSuccess() {
         // Stop the timer
         if (timerInterval) {
@@ -867,6 +910,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
         const minutes = Math.floor(elapsedSeconds / 60);
         const seconds = elapsedSeconds % 60;
+        
+        // Calculate score
+        const scoreData = calculateScore(elapsedSeconds, blunders, hintsUsed);
+        finalScore = scoreData.total;
         
         const successMessage = en.messages.congratulations
             .replace('{minutes}', minutes)
@@ -884,6 +931,67 @@ document.addEventListener('DOMContentLoaded', function() {
                 tile.classList.remove('correct');
             }, 1000);
         });
+        
+        // Show score modal after a short delay to allow celebration animation to play
+        setTimeout(() => {
+            showScoreModal(scoreData, minutes, seconds);
+        }, 1500);
+    }
+    
+    // Function to display the score modal with animation
+    function showScoreModal(scoreData, minutes, seconds) {
+        console.log('Showing score modal with data:', scoreData);
+        
+        // Get modal elements
+        const scoreModal = document.getElementById('score-modal');
+        const finalScoreElement = scoreModal.querySelector('.final-score');
+        const baseScoreElement = scoreModal.querySelector('.base-score');
+        const timeBonusElement = scoreModal.querySelector('.time-bonus');
+        const blunderPenaltyElement = scoreModal.querySelector('.blunder-penalty');
+        const hintPenaltyElement = scoreModal.querySelector('.hint-penalty');
+        
+        // Get stats elements
+        const timeValueElement = scoreModal.querySelector('.time-value');
+        const blundersValueElement = scoreModal.querySelector('.blunders-value');
+        const hintsValueElement = scoreModal.querySelector('.hints-value');
+        
+        // Set values
+        finalScoreElement.textContent = scoreData.total;
+        baseScoreElement.textContent = scoreData.baseScore;
+        timeBonusElement.textContent = `+${scoreData.timeBonus}`;
+        blunderPenaltyElement.textContent = `-${scoreData.blunderPenalty}`;
+        hintPenaltyElement.textContent = `-${scoreData.hintPenalty}`;
+        
+        // Format time for display
+        const formattedMinutes = Math.floor(scoreData.timeInSeconds / 60).toString().padStart(2, '0');
+        const formattedSeconds = (scoreData.timeInSeconds % 60).toString().padStart(2, '0');
+        
+        // Set stats values
+        timeValueElement.textContent = `${formattedMinutes}:${formattedSeconds}`;
+        blundersValueElement.textContent = scoreData.blunders;
+        hintsValueElement.textContent = scoreData.hintsUsed;
+        
+        // Show the modal with flex display for centering
+        scoreModal.style.display = 'flex';
+        
+        // Set up event listener for the Play Again button
+        const playAgainButton = document.getElementById('play-again-button');
+        
+        // Remove any existing event listeners to prevent duplicates
+        const newPlayAgainButton = playAgainButton.cloneNode(true);
+        playAgainButton.parentNode.replaceChild(newPlayAgainButton, playAgainButton);
+        
+        // Add new event listener
+        newPlayAgainButton.addEventListener('click', () => {
+            hideScoreModal();
+            initGame();
+        });
+    }
+    
+    // Function to hide the score modal
+    function hideScoreModal() {
+        const scoreModal = document.getElementById('score-modal');
+        scoreModal.style.display = 'none';
     }
     
     // Show hint
