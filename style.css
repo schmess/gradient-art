@@ -186,14 +186,16 @@ h1 {
 }
 
 .tile.locked::after {
-    content: "🔒";
+    content: "";
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 1.5rem;
-    color: rgba(255, 255, 255, 0.8);
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+    width: 10px;
+    height: 10px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 50%;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.7);
     transition: opacity 0.5s ease-out;
 }
 
@@ -315,7 +317,7 @@ button:active {
 .welcome {
     background-color: rgba(108, 92, 231, 0.2);
     color: #9C27B0;
-    font-size: 1.5rem;
+    font-size: 1.2em;
     font-weight: bold;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
