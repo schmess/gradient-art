@@ -112,7 +112,8 @@ h1 {
     max-width: min(40vw, 70vh);
     min-width: min(40vw, 70vh);
     width: min(40vw, 70vh);
-    min-height: min(40vw, 70vh);
+    /* min-height: min(40vw, 70vh); */
+    min-height: 300px;
     max-height: min(40vw, 70vh);
     height: min(40vw, 70vh);
 }
