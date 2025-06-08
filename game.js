@@ -3,6 +3,36 @@ const en = window.en;
 document.addEventListener('DOMContentLoaded', function() {
     // Use en global variable from en.js (loaded in HTML before this file)
     
+    // Check device orientation and add event listener to detect orientation changes
+    const orientationOverlay = document.querySelector('.orientation-overlay');
+    const gameContainer = document.querySelector('.game-container');
+    
+    function checkOrientation() {
+        // Only apply to mobile devices (screen width less than 768px)
+        if (window.innerWidth <= 768) {
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                // Portrait mode - show overlay
+                orientationOverlay.style.display = 'flex';
+                gameContainer.style.visibility = 'hidden';
+            } else {
+                // Landscape mode - hide overlay
+                orientationOverlay.style.display = 'none';
+                gameContainer.style.visibility = 'visible';
+            }
+        } else {
+            // Desktop/tablet in landscape - always show game
+            orientationOverlay.style.display = 'none';
+            gameContainer.style.visibility = 'visible';
+        }
+    }
+    
+    // Initial check
+    checkOrientation();
+    
+    // Add event listener for orientation changes
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    
     // Game puzzle configuration in a single data structure
     const puzzleData = {
         // Palette types for each row (in order)

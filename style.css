@@ -21,11 +21,13 @@ body {
     background-size: 400% 400%;
     animation: sunsetBlissGradient 150s ease-in-out infinite;
     color: var(--dark);
-    padding: 20px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 @keyframes sunsetBlissGradient {
@@ -78,16 +80,31 @@ h1 {
 .game-container {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 15px;
     width: 95%;
     max-width: 1400px;
     margin: 0 auto;
+    justify-content: center;
 }
 
 @media (min-width: 900px) {
     .game-container {
         flex-direction: row;
         align-items: flex-start;
+    }
+}
+
+/* Optimize layout for landscape mode on mobile devices */
+@media (max-width: 768px) and (orientation: landscape) {
+    .game-container {
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 90%;
+        margin: 5px auto;
+        max-width: 100vw;
+        overflow: hidden;
     }
 }
 
@@ -101,6 +118,9 @@ h1 {
     -webkit-backdrop-filter: blur(5px);
     position: relative;
     border: 1px solid rgba(255, 255, 255, 0.3);
+    max-width: 70vh;
+    min-width: 70vh;
+    height: 70vh;
 }
 
 .matrix {
@@ -110,8 +130,18 @@ h1 {
     gap: 12px;
     aspect-ratio: 1/1;
     width: 100%;
-    min-height: 400px;
+    min-height: fit-content;
     position: relative;
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+    .matrix-container {
+        padding: 5px;
+        margin: 0;
+        height: 70vh;
+        max-width: 70vh;
+        max-width: 45%;
+    }
 }
 
 .row-label {
@@ -196,6 +226,18 @@ button {
     transition: background-color 0.2s, transform 0.1s;
 }
 
+@media (max-width: 768px) and (orientation: landscape) {
+    .controls {
+        margin: 10px 0;
+        gap: 10px;
+    }
+    
+    button {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+}
+
 button:hover {
     background-color: #2a3f56;
 }
@@ -239,13 +281,14 @@ button:active {
 }
 
 .message-area {
-    min-height: 60px;
+    min-height: 40px;
     text-align: center;
-    margin: 20px 0;
-    padding: 15px;
+    margin: 10px 0;
+    padding: 8px;
     border-radius: 6px;
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 1rem;
+    max-width: 90%;
 }
 
 .success {
@@ -299,6 +342,14 @@ button:active {
     max-width: 800px;
 }
 
+@media (max-width: 768px) and (orientation: landscape) {
+    .game-stats {
+        padding: 8px;
+        margin: 8px 0;
+        max-width: 90%;
+    }
+}
+
 .stat {
     text-align: center;
     font-weight: bold;
@@ -312,6 +363,16 @@ button:active {
 .stat-label {
     font-size: 0.9rem;
     color: var(--secondary);
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+    .stat-value {
+        font-size: 1.2rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+    }
 }
 
 @keyframes shake {
@@ -391,11 +452,6 @@ button:active {
 }
 
 @media (max-width: 768px) {
-    .matrix {
-        gap: 8px;
-        min-height: 300px;
-    }
-    
     .controls {
         flex-direction: column;
         width: 100%;
@@ -428,4 +484,59 @@ button:active {
 .correct-position {
     animation: correctPlacement 0.5s;
     border: 2px solid var(--success);
+}
+
+/* Landscape mode enforcement */
+.orientation-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(28, 37, 65, 0.95);
+    z-index: 1000;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.orientation-overlay h2 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: var(--light);
+}
+
+.orientation-overlay p {
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+    max-width: 400px;
+}
+
+.rotate-icon {
+    font-size: 4rem;
+    animation: rotateDevice 2s infinite;
+    margin: 20px 0;
+    display: inline-block;
+}
+
+@keyframes rotateDevice {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(0deg); }
+    50% { transform: rotate(90deg); }
+    75% { transform: rotate(90deg); }
+    100% { transform: rotate(0deg); }
+}
+
+@media screen and (max-width: 768px) and (orientation: portrait) {
+    .orientation-overlay {
+        display: flex;
+    }
+    
+    .game-container {
+        visibility: hidden;
+    }
 }
