@@ -109,10 +109,7 @@ h1 {
     position: relative;
     border: 1px solid rgba(255, 255, 255, 0.3);
     aspect-ratio: 1/1;
-    max-width: min(40vw, 70vh);
-    min-width: min(40vw, 70vh);
-    width: min(40vw, 70vh);
-    height: min(40vw, 70vh);
+    /* Size will be set by JavaScript */
 }
 
 .matrix {
@@ -130,9 +127,7 @@ h1 {
     .matrix-container {
         padding: 5px;
         margin: 0;
-        height: 70vh;
-        max-width: 70vh;
-        max-width: 45%;
+        /* Size will be set by JavaScript */
     }
 }
 
