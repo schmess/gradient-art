@@ -81,6 +81,21 @@ document.addEventListener('DOMContentLoaded', function() {
     let hintCountdownInterval = null;
     let solutionVisible = false; // Track if solution is currently shown
     let firstMoveMade = false; // Track if the first move has been made
+    let affirmationTimeout = null; // Track the timeout for clearing affirmations
+    
+    // Colors for affirmation messages (purple and pink palette)
+    const affirmationColors = [
+        "#B159FF", // Purple
+        "#9C27B0", // Deep Purple
+        "#673AB7", // Indigo Purple
+        "#FF59B6", // Pink
+        "#FF4081", // Deep Pink
+        "#E91E63"  // Magenta
+    ];
+    
+    // Counter for tracking moves between affirmations
+    let movesSinceLastAffirmation = 0;
+    const movesRequiredForAffirmation = 12; // Show affirmation every ~12 moves
     
     // Initialize game
     function initGame() {
@@ -90,11 +105,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add welcome message
         messageArea.textContent = en.messages.welcome;
-        messageArea.className = 'message-area hint';
+        messageArea.className = 'message-area hint welcome';
         
-        // Reset game stats
+        // Reset game stats and counters
         blunders = 0;
         hintsUsed = 0;
+        movesSinceLastAffirmation = 0;
         updateBlunderDisplay();
         updateHintsDisplay();
         
@@ -177,14 +193,12 @@ document.addEventListener('DOMContentLoaded', function() {
         tile.dataset.color = color;
         tile.dataset.index = index;
         
-        // Check if this is a center column tile (always locked)
-        const col = index % 5;
-        const isLockedPosition = col === 2;
-        
-        if (isLockedPosition && type === 'solution') {
+        // Only add the locked class if this tile is explicitly a locked tile
+        // We determine locking based on puzzle data, not position
+        if (type === 'locked') {
             tile.classList.add('locked');
         } else if (type === 'scrambled' || type === 'solution') {
-            // Make tiles draggable except for locked ones
+            // Make tiles draggable if they're not locked
             tile.draggable = true;
             tile.addEventListener('dragstart', handleDragStart);
             tile.addEventListener('dragend', handleDragEnd);
@@ -202,6 +216,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 tile.classList.add('hide-lock');
             });
         }
+    }
+    
+    // Function to show a random affirmation message
+    function showRandomAffirmation(force = false) {
+        // Only show affirmation if enough moves have been made or force=true
+        movesSinceLastAffirmation++;
+        
+        if (!force && movesSinceLastAffirmation < movesRequiredForAffirmation) {
+            return; // Not enough moves yet, skip affirmation
+        }
+        
+        // Reset counter when showing an affirmation
+        movesSinceLastAffirmation = 0;
+        
+        // Clear any existing timeout
+        if (affirmationTimeout) {
+            clearTimeout(affirmationTimeout);
+        }
+        
+        // Get a random affirmation
+        const randomIndex = Math.floor(Math.random() * en.affirmations.length);
+        const affirmation = en.affirmations[randomIndex];
+        
+        // Get a random color
+        const colorIndex = Math.floor(Math.random() * affirmationColors.length);
+        const color = affirmationColors[colorIndex];
+        
+        // Set the message and apply the color
+        messageArea.textContent = affirmation;
+        messageArea.className = 'message-area';
+        messageArea.style.color = color;
+        
+        // Set a timeout to clear the message after 5 seconds
+        affirmationTimeout = setTimeout(() => {
+            showRandomAffirmation(true);
+        }, 5000); // Show for 5 seconds
     }
     
     // Helper function to lighten a color
@@ -399,9 +449,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Correct position - show positive feedback
                 newTile.classList.add('correct-position');
                 
-                // Clear any messages
-                messageArea.textContent = "";
-                messageArea.className = 'message-area';
+                // Show a random affirmation
+                showRandomAffirmation();
                 
                 // Remove the animation class after it completes
                 setTimeout(() => {
@@ -478,9 +527,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Correct position - show positive feedback
                 newTile.classList.add('correct-position');
                 
-                // Clear any messages
-                messageArea.textContent = "";
-                messageArea.className = 'message-area';
+                // Show a random affirmation
+                showRandomAffirmation();
                 
                 // Remove the animation class after it completes
                 setTimeout(() => {

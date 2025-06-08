@@ -1,9 +1,9 @@
-Shades game
+The Gradient Artist game
 
 
-# Shades: Color Theory Puzzle Game Design Document
+# The Gradient Artist: Color Theory Puzzle Game Design Document
 ## Game Concept Overview
-Shades is an educational puzzle game that teaches color theory through interactive tile-based gameplay. Players reconstruct scrambled color palettes by manipulating tiles in a 5x5 matrix, where each row represents a different color palette type. The game combines strategic thinking with visual design principles, creating an engaging learning experience for both casual players and design enthusiasts.
+The Gradient Artist is an educational puzzle game that teaches color theory through interactive tile-based gameplay. Players reconstruct scrambled color palettes by manipulating tiles in a 5x5 matrix, where each row represents a different color palette type. The game combines strategic thinking with visual design principles, creating an engaging learning experience for both casual players and design enthusiasts.
 Core Learning Objective: Players develop understanding of six fundamental color palette types through hands-on manipulation and pattern recognition, building both theoretical knowledge and practical color sense.
 ## Color Palette Foundation
 ### The Six Palette Types

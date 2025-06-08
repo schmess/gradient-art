@@ -1,12 +1,17 @@
-// English language strings for Shades game
+// English language strings for The Gradient Artist game
 window.en = {
-  gameTitle: "Shades",
-  gameSubtitle: "Create Beautiful Color Palettes",
-  
-  matrices: {
-    scrambled: "Color Pool",
-    solution: "Your Canvas"
-  },
+  affirmations: [
+    "You have an amazing eye for color! ✨",
+    "Your creativity is truly inspiring! 🌟",
+    "These palettes showcase your artistic talent! 🎨",
+    "You're creating something beautiful! 💫",
+    "You're a natural at color harmony! 🌈",
+    "Your color choices are so thoughtful! ✨",
+    "That's a perfect combination! 🌟",
+    "Your design sense is exceptional! 💖",
+    "You make color selection look effortless! ✨",
+    "What a gorgeous palette you're creating! 🎨"
+  ],
   
   buttons: {
     showSolution: "Show Me How ✨",

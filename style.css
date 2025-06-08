@@ -17,13 +17,45 @@
 }
 
 body {
-    background-color: var(--light);
+    background: linear-gradient(-45deg, #6C5CE7f0, #4ECDC4f0, #FDCB6Ef0, #45B7D1f0, #6C5CE7f0);
+    background-size: 400% 400%;
+    animation: sunsetBlissGradient 150s ease-in-out infinite;
     color: var(--dark);
     padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
+}
+
+@keyframes sunsetBlissGradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    25% {
+        background-position: 25% 50%;
+    }
+    50% {
+        background-position: 50% 50%;
+    }
+    75% {
+        background-position: 75% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 header {
@@ -61,18 +93,14 @@ h1 {
 
 .matrix-container {
     flex: 1;
-    background-color: white;
-    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     position: relative;
-}
-
-.matrix-title {
-    text-align: center;
-    margin-bottom: 20px;
-    color: var(--primary);
-    font-size: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .matrix {
@@ -235,10 +263,34 @@ button:active {
     color: var(--secondary);
 }
 
+.welcome {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: #B159FF;
+    /* background: linear-gradient(90deg, #B159FF, #5bc0be, #6fffe9, #B159FF);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: welcomeGradient 40s ease-in-out infinite; */
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+@keyframes welcomeGradient {
+    0% {
+        background-position: 48% 52%;
+    }
+    50% {
+        background-position: 52% 48%;
+    }
+    100% {
+        background-position: 48% 52%;
+    }
+}
+
 .game-stats {
     display: flex;
     justify-content: space-between;
-    background-color: white;
+    background-color: #ffffff10;
     border-radius: 8px;
     padding: 15px;
     margin: 20px 0;
@@ -288,7 +340,7 @@ button:active {
 }
 
 .game-info {
-    background-color: white;
+    background-color: #ffffff10;
     border-radius: 8px;
     padding: 15px;
     margin-top: 30px;
