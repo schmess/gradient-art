@@ -1,5 +1,33 @@
 const en = window.en;
 
+// Polyfill for Array.find() method for older browsers
+if (!Array.prototype.find) {
+    Object.defineProperty(Array.prototype, 'find', {
+        value: function(predicate) {
+            if (this == null) {
+                throw new TypeError('"this" is null or not defined');
+            }
+            if (typeof predicate !== 'function') {
+                throw new TypeError('predicate must be a function');
+            }
+            
+            var o = Object(this);
+            var len = o.length >>> 0;
+            var thisArg = arguments[1];
+            
+            for (var i = 0; i < len; i++) {
+                var value = o[i];
+                if (predicate.call(thisArg, value, i, o)) {
+                    return value;
+                }
+            }
+            return undefined;
+        },
+        configurable: true,
+        writable: true
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Use en global variable from en.js (loaded in HTML before this file)
     
@@ -282,6 +310,14 @@ document.addEventListener('DOMContentLoaded', function() {
         updateActiveTiles();
     }
     
+    // Variables for touch handling
+    let touchedTile = null;
+    let touchOffsetX = 0;
+    let touchOffsetY = 0;
+    let lastTouchedEmpty = null;
+    let ghostTile = null;
+    let isTouchMoving = false;
+    
     // Create a color tile
     function createTile(color, index, type) {
         const tile = document.createElement('div');
@@ -302,8 +338,16 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (type === 'scrambled' || type === 'solution') {
             // Make tiles draggable if they're not locked
             tile.draggable = true;
+            
+            // Add mouse/desktop drag events
             tile.addEventListener('dragstart', handleDragStart);
             tile.addEventListener('dragend', handleDragEnd);
+            
+            // Add touch events for mobile
+            tile.addEventListener('touchstart', handleTouchStart, { passive: false });
+            tile.addEventListener('touchmove', handleTouchMove, { passive: false });
+            tile.addEventListener('touchend', handleTouchEnd);
+            tile.addEventListener('touchcancel', handleTouchCancel);
         }
         
         return tile;
@@ -1087,6 +1131,180 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!solutionVisible) {
             verifySolution();
         }
+    }
+    
+    // Touch event handlers for mobile devices
+    function handleTouchStart(e) {
+        // Prevent default behavior to avoid scrolling
+        e.preventDefault();
+        
+        // Only handle non-locked tiles
+        if (this.classList.contains('locked')) {
+            return;
+        }
+        
+        // Store the touched tile
+        touchedTile = this;
+        
+        // Remember if this is from scrambled or solution matrix
+        touchedTile.dataset.sourceMatrix = this.closest('#scrambled-matrix') ? 'scrambled' : 'solution';
+        
+        // Get touch position relative to the tile
+        const touch = e.touches[0];
+        const rect = touchedTile.getBoundingClientRect();
+        touchOffsetX = touch.clientX - rect.left;
+        touchOffsetY = touch.clientY - rect.top;
+        
+        // Create ghost tile for visual feedback
+        createGhostTile(touch.clientX, touch.clientY);
+        
+        // Add visual feedback
+        touchedTile.style.opacity = '0.4';
+    }
+    
+    function handleTouchMove(e) {
+        if (!touchedTile) return;
+        
+        // Prevent default behavior to avoid scrolling
+        e.preventDefault();
+        
+        // Set flag to indicate movement (to distinguish from tap)
+        isTouchMoving = true;
+        
+        const touch = e.touches[0];
+        
+        // Move the ghost tile
+        moveGhostTile(touch.clientX, touch.clientY);
+        
+        // Detect if we're over an empty slot - ensure cross-browser compatibility
+        let elementsAtPoint = [];
+        
+        // Use elementsFromPoint if available, otherwise fall back to elementFromPoint
+        if (document.elementsFromPoint) {
+            elementsAtPoint = document.elementsFromPoint(touch.clientX, touch.clientY);
+        } else if (document.elementFromPoint) {
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (element) elementsAtPoint = [element];
+        }
+        
+        const emptySlotElement = elementsAtPoint.find(el => 
+            el.classList && el.classList.contains('empty-slot')
+        );
+        
+        // Reset previous highlighting
+        if (lastTouchedEmpty && lastTouchedEmpty !== emptySlotElement) {
+            lastTouchedEmpty.classList.remove('touch-hover');
+        }
+        
+        // Highlight the current empty slot
+        if (emptySlotElement) {
+            emptySlotElement.classList.add('touch-hover');
+            lastTouchedEmpty = emptySlotElement;
+        }
+    }
+    
+    function handleTouchEnd(e) {
+        if (!touchedTile) return;
+        
+        // Remove ghost tile
+        removeGhostTile();
+        
+        // Reset opacity of the original tile
+        touchedTile.style.opacity = '1';
+        
+        // Only process if there was actual movement (not just a tap)
+        if (isTouchMoving) {
+            // Get the touch position
+            const touch = e.changedTouches[0];
+            
+            // Find the element at the touch position - ensure cross-browser compatibility
+            let elementsAtPoint = [];
+            
+            // Use elementsFromPoint if available, otherwise fall back to elementFromPoint
+            if (document.elementsFromPoint) {
+                elementsAtPoint = document.elementsFromPoint(touch.clientX, touch.clientY);
+            } else if (document.elementFromPoint) {
+                const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (element) elementsAtPoint = [element];
+            }
+            
+            const emptySlotElement = elementsAtPoint.find(el => 
+                el.classList && el.classList.contains('empty-slot')
+            );
+            
+            // If we have an empty slot, simulate a drop
+            if (emptySlotElement) {
+                // Reset highlight
+                emptySlotElement.classList.remove('touch-hover');
+                
+                // Set draggedTile (used by handleDrop)
+                draggedTile = touchedTile;
+                
+                // Call the drop handler
+                handleDrop.call(emptySlotElement, { preventDefault: () => {} });
+            }
+        }
+        
+        // Reset touch tracking variables
+        touchedTile = null;
+        lastTouchedEmpty = null;
+        isTouchMoving = false;
+    }
+    
+    function handleTouchCancel() {
+        // Clean up
+        if (touchedTile) {
+            touchedTile.style.opacity = '1';
+        }
+        removeGhostTile();
+        
+        // Reset touch tracking variables
+        touchedTile = null;
+        lastTouchedEmpty = null;
+        isTouchMoving = false;
+    }
+    
+    // Helper functions for touch interactions
+    function createGhostTile(x, y) {
+        // Remove any existing ghost
+        removeGhostTile();
+        
+        // Create a clone of the touched tile
+        ghostTile = touchedTile.cloneNode(true);
+        ghostTile.classList.add('ghost-tile');
+        ghostTile.style.position = 'fixed';
+        ghostTile.style.zIndex = '1000';
+        ghostTile.style.opacity = '0.8';
+        ghostTile.style.pointerEvents = 'none'; // Allow touches to pass through
+        
+        // Position the ghost at the right spot
+        moveGhostTile(x, y);
+        
+        // Add to document
+        document.body.appendChild(ghostTile);
+    }
+    
+    function moveGhostTile(x, y) {
+        if (!ghostTile) return;
+        
+        // Position the ghost tile centered on the touch point
+        const width = ghostTile.offsetWidth;
+        const height = ghostTile.offsetHeight;
+        
+        ghostTile.style.left = (x - touchOffsetX) + 'px';
+        ghostTile.style.top = (y - touchOffsetY) + 'px';
+    }
+    
+    function removeGhostTile() {
+        if (ghostTile && ghostTile.parentNode) {
+            ghostTile.parentNode.removeChild(ghostTile);
+            ghostTile = null;
+        }
+        
+        // Also remove any touch-hover class from empty slots
+        document.querySelectorAll('.empty-slot.touch-hover').forEach(slot => {
+            slot.classList.remove('touch-hover');
+        });
     }
     
     // Helper to check if a row's colors are valid compared to the solution row

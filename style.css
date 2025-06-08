@@ -110,7 +110,8 @@ h1 {
     border: 1px solid rgba(255, 255, 255, 0.3);
     max-width: 40vw;
     min-width: 40vw;
-    height: 40vw;
+    min-height: 40vw;
+    max-height: 40vw;
 }
 
 .matrix {
@@ -691,4 +692,40 @@ button:active {
 
 #score-modal {
     display: none;
+}
+
+/* Touch interaction styles */
+.ghost-tile {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    transform: scale(1.05);
+    border-radius: 8px;
+    pointer-events: none;
+    touch-action: none;
+    transition: none !important; /* Prevent transitions for smooth movement */
+    will-change: transform; /* Optimize performance */
+}
+
+.empty-slot.touch-hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px var(--accent);
+    transform: scale(1.05);
+    transition: all 0.15s ease;
+}
+
+/* Make sure tiles are tap-friendly on mobile */
+@media (max-width: 768px) {
+    .tile {
+        touch-action: none; /* Prevent browser handling of touches */
+        -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
+    }
+    
+    .tile:active {
+        transform: scale(1.05);
+    }
+    
+    /* Increase hit areas */
+    .empty-slot {
+        min-height: 40px;
+        min-width: 40px;
+    }
 }
