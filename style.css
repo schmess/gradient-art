@@ -112,8 +112,6 @@ h1 {
     max-width: min(40vw, 70vh);
     min-width: min(40vw, 70vh);
     width: min(40vw, 70vh);
-    min-height: min(40vw, 70vh);
-    max-height: min(40vw, 70vh);
     height: min(40vw, 70vh);
 }
 
@@ -316,7 +314,7 @@ button:active {
 
 .welcome {
     background-color: rgba(108, 92, 231, 0.2);
-    color: #c0b3ff;
+    color: #9C27B0;
     font-size: 1.5rem;
     font-weight: bold;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -706,13 +704,16 @@ button:active {
     touch-action: none;
     transition: none !important; /* Prevent transitions for smooth movement */
     will-change: transform; /* Optimize performance */
+    top: 0;
+    left: 0;
 }
 
 .empty-slot.touch-hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 0 10px var(--accent);
-    transform: scale(1.05);
-    transition: all 0.15s ease;
+    background-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 15px var(--accent);
+    transform: scale(1.08);
+    transition: all 0.1s ease-out;
+    z-index: 5;
 }
 
 /* Make sure tiles are tap-friendly on mobile */
@@ -720,6 +721,9 @@ button:active {
     .tile {
         touch-action: none; /* Prevent browser handling of touches */
         -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
+        user-select: none; /* Prevent text selection */
+        -webkit-user-select: none; /* For Safari */
+        -webkit-touch-callout: none; /* Disable callout on long-press */
     }
     
     .tile:active {
@@ -730,5 +734,14 @@ button:active {
     .empty-slot {
         min-height: 40px;
         min-width: 40px;
+    }
+    
+    /* Improve performance for animations */
+    .matrix-container, .matrix, .tile {
+        will-change: transform;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        perspective: 1000px;
+        -webkit-perspective: 1000px;
     }
 }
