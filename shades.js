@@ -1,11 +1,33 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Color palettes definition (these could be generated programmatically in a more advanced version)
-    const palettes = {
-        monochromatic: ['#e6f2ff', '#bfd9ff', '#99c2ff', '#6699ff', '#3366ff'],
-        analogous: ['#ff9999', '#ffcc99', '#ffff99', '#ccff99', '#99ffcc'],
-        triadic: ['#ff5555', '#55ff55', '#5555ff', '#ff5555', '#5555ff'],
-        splitComplementary: ['#ff6600', '#ff9933', '#33cc99', '#66cc99', '#cc33cc'],
-        complementary: ['#ff5555', '#ff9999', '#ffffff', '#9999ff', '#5555ff']
+    // Game puzzle configuration in a single data structure
+    const puzzleData = {
+        // Palette types for each row (in order)
+        paletteTypes: [
+            "monochromatic",
+            "analogous",
+            "triadic",
+            "splitComplementary",
+            "complementary"
+        ],
+        
+        // All available palettes
+        palettes: {
+            monochromatic: ['#e6f2ff', '#bfd9ff', '#99c2ff', '#6699ff', '#3366ff'],
+            analogous: ['#ff9999', '#ffcc99', '#ffff99', '#ccff99', '#99ffcc'],
+            triadic: ['#ff5555', '#55ff55', '#5555ff', '#ff5555', '#5555ff'],
+            splitComplementary: ['#ff6600', '#ff9933', '#33cc99', '#66cc99', '#cc33cc'],
+            complementary: ['#ff5555', '#ff9999', '#ffffff', '#9999ff', '#5555ff']
+        },
+        
+        // Locked/visible tiles mask (true = locked/visible)
+        // Each row's array represents which columns are locked
+        lockedTiles: [
+            [false, false, true, false, false],  // Row 1: Only center tile
+            [false, true, false, true, false],   // Row 2: Columns 2 and 4
+            [true, false, true, false, true],    // Row 3: Columns 1, 3, and 5
+            [false, true, false, true, false],   // Row 4: Columns 2 and 4
+            [false, false, true, false, false]   // Row 5: Only center tile
+        ]
     };
     
     // Game elements
@@ -61,10 +83,10 @@ document.addEventListener('DOMContentLoaded', function() {
         solutionVisible = false;
         firstMoveMade = false;
         
-        // Create all color tiles
+        // Create all color tiles for scrambled matrix
         const allColors = [];
-        Object.values(palettes).forEach(palette => {
-            allColors.push(...palette);
+        puzzleData.paletteTypes.forEach(type => {
+            allColors.push(...puzzleData.palettes[type]);
         });
         
         // Create scrambled tiles
@@ -75,43 +97,19 @@ document.addEventListener('DOMContentLoaded', function() {
             scrambledMatrix.appendChild(tile);
         });
         
-        // Create solution matrix with specific locked tiles for each row
-        for (let row = 0; row < 5; row++) {
-            for (let col = 0; col < 5; col++) {
+        // Create solution matrix with locked tiles based on puzzle data
+        for (let row = 0; row < puzzleData.lockedTiles.length; row++) {
+            const rowLockPattern = puzzleData.lockedTiles[row];
+            const paletteType = puzzleData.paletteTypes[row];
+            const palette = puzzleData.palettes[paletteType];
+            
+            for (let col = 0; col < rowLockPattern.length; col++) {
                 // Calculate the index in a 5x5 grid
                 const index = row * 5 + col;
+                const isLocked = rowLockPattern[col];
                 
-                // Determine if this position should be locked based on the row
-                let shouldLock = false;
-                
-                // For row 1, only the center column (col 2) is locked
-                if (row === 0 && col === 2) {
-                    shouldLock = true;
-                }
-                // For row 2, columns 1 and 3 (index 1 and 3) are locked - using zero-based indexing
-                // This shows the second and fourth columns (columns 2 and 4 in one-based indexing)
-                else if (row === 1 && (col === 1 || col === 3)) {
-                    shouldLock = true;
-                }
-                // For row 3, columns 0, 2, and 4 are locked
-                // This shows the first, third, and fifth columns (columns 1, 3, 5 in one-based indexing)
-                else if (row === 2 && (col === 0 || col === 2 || col === 4)) {
-                    shouldLock = true;
-                }
-                // For row 4, columns 1 and 3 (index 1 and 3) are locked - using zero-based indexing
-                // This shows the second and fourth columns (columns 2 and 4 in one-based indexing)
-                else if (row === 3 && (col === 1 || col === 3)) {
-                    shouldLock = true;
-                }
-                // For row 5, only the center column (col 2) is locked
-                else if (row === 4 && col === 2) {
-                    shouldLock = true;
-                }
-                
-                if (shouldLock) {
+                if (isLocked) {
                     // Place locked tile with correct color
-                    const paletteType = Object.keys(palettes)[row];
-                    const palette = palettes[paletteType];
                     const lockedTile = createTile(palette[col], index, 'locked');
                     lockedTile.classList.add('locked');
                     solutionMatrix.appendChild(lockedTile);
@@ -229,8 +227,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const targetIndex = parseInt(this.dataset.index);
         const targetRow = Math.floor(targetIndex / 5);
         const targetCol = targetIndex % 5;
-        const paletteType = Object.keys(palettes)[targetRow];
-        const correctPalette = palettes[paletteType];
+        const paletteType = puzzleData.paletteTypes[targetRow];
+        const correctPalette = puzzleData.palettes[paletteType];
         const tileColor = draggedTile.dataset.color;
         
         // Check if the color belongs to the correct palette (correct row)
@@ -504,36 +502,13 @@ document.addEventListener('DOMContentLoaded', function() {
         clearSolutionMatrix();
         
         // Place all tiles in their correct positions
-        for (let row = 0; row < 5; row++) {
-            const paletteType = Object.keys(palettes)[row];
-            const correctPalette = palettes[paletteType];
+        for (let row = 0; row < puzzleData.lockedTiles.length; row++) {
+            const paletteType = puzzleData.paletteTypes[row];
+            const correctPalette = puzzleData.palettes[paletteType];
             
-            for (let col = 0; col < 5; col++) {
+            for (let col = 0; col < puzzleData.lockedTiles[row].length; col++) {
                 const index = row * 5 + col;
-                
-                // Determine if this is a locked position by checking row and col pattern
-                let isLockedPosition = false;
-                
-                // For row 1, only the center column (col 2) is locked
-                if (row === 0 && col === 2) {
-                    isLockedPosition = true;
-                }
-                // For row 2, columns 1 and 3 are locked
-                else if (row === 1 && (col === 1 || col === 3)) {
-                    isLockedPosition = true;
-                }
-                // For row 3, columns 0, 2, and 4 are locked
-                else if (row === 2 && (col === 0 || col === 2 || col === 4)) {
-                    isLockedPosition = true;
-                }
-                // For row 4, columns 1 and 3 are locked
-                else if (row === 3 && (col === 1 || col === 3)) {
-                    isLockedPosition = true;
-                }
-                // For row 5, only the center column (col 2) is locked
-                else if (row === 4 && col === 2) {
-                    isLockedPosition = true;
-                }
+                const isLockedPosition = puzzleData.lockedTiles[row][col];
                 
                 // Skip any locked tiles (they're already there)
                 if (isLockedPosition) {
@@ -572,35 +547,14 @@ document.addEventListener('DOMContentLoaded', function() {
         window.savedState = [];
         
         // For each position in the solution matrix
-        for (let row = 0; row < 5; row++) {
-            for (let col = 0; col < 5; col++) {
+        for (let row = 0; row < puzzleData.lockedTiles.length; row++) {
+            for (let col = 0; col < puzzleData.lockedTiles[row].length; col++) {
                 const index = row * 5 + col;
                 const tile = solutionMatrix.querySelector(`.tile[data-index="${index}"]`);
                 
                 if (tile && !tile.classList.contains('empty-slot')) {
-                    // Determine if this is a locked position by checking row and col pattern
-                    let isLockedPosition = false;
-                    
-                    // For row 1, only the center column (col 2) is locked
-                    if (row === 0 && col === 2) {
-                        isLockedPosition = true;
-                    }
-                    // For row 2, columns 1 and 3 are locked
-                    else if (row === 1 && (col === 1 || col === 3)) {
-                        isLockedPosition = true;
-                    }
-                    // For row 3, columns 0, 2, and 4 are locked
-                    else if (row === 2 && (col === 0 || col === 2 || col === 4)) {
-                        isLockedPosition = true;
-                    }
-                    // For row 4, columns 1 and 3 are locked
-                    else if (row === 3 && (col === 1 || col === 3)) {
-                        isLockedPosition = true;
-                    }
-                    // For row 5, only the center column (col 2) is locked
-                    else if (row === 4 && col === 2) {
-                        isLockedPosition = true;
-                    }
+                    // Determine if this is a locked position based on puzzle data
+                    const isLockedPosition = puzzleData.lockedTiles[row][col];
                     
                     // Save the color and position
                     window.savedState.push({
@@ -615,34 +569,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to clear the solution matrix except for locked tiles
     function clearSolutionMatrix() {
-        for (let row = 0; row < 5; row++) {
-            for (let col = 0; col < 5; col++) {
+        for (let row = 0; row < puzzleData.lockedTiles.length; row++) {
+            for (let col = 0; col < puzzleData.lockedTiles[row].length; col++) {
                 const index = row * 5 + col;
                 const tile = solutionMatrix.querySelector(`.tile[data-index="${index}"]`);
                 
-                // Determine if this is a locked position by checking row and col pattern
-                let isLockedPosition = false;
-                
-                // For row 1, only the center column (col 2) is locked
-                if (row === 0 && col === 2) {
-                    isLockedPosition = true;
-                }
-                // For row 2, columns 1 and 3 are locked
-                else if (row === 1 && (col === 1 || col === 3)) {
-                    isLockedPosition = true;
-                }
-                // For row 3, columns 0, 2, and 4 are locked
-                else if (row === 2 && (col === 0 || col === 2 || col === 4)) {
-                    isLockedPosition = true;
-                }
-                // For row 4, columns 1 and 3 are locked
-                else if (row === 3 && (col === 1 || col === 3)) {
-                    isLockedPosition = true;
-                }
-                // For row 5, only the center column (col 2) is locked
-                else if (row === 4 && col === 2) {
-                    isLockedPosition = true;
-                }
+                // Determine if this is a locked position based on puzzle data
+                const isLockedPosition = puzzleData.lockedTiles[row][col];
                 
                 // Skip any locked tiles
                 if (isLockedPosition && tile) {
@@ -676,29 +609,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const row = Math.floor(index / 5);
                 const col = index % 5;
                 
-                // Determine if this is a locked position by checking row and col pattern
-                let isLockedPosition = false;
-                
-                // For row 1, only the center column (col 2) is locked
-                if (row === 0 && col === 2) {
-                    isLockedPosition = true;
-                }
-                // For row 2, columns 1 and 3 are locked
-                else if (row === 1 && (col === 1 || col === 3)) {
-                    isLockedPosition = true;
-                }
-                // For row 3, columns 0, 2, and 4 are locked
-                else if (row === 2 && (col === 0 || col === 2 || col === 4)) {
-                    isLockedPosition = true;
-                }
-                // For row 4, columns 1 and 3 are locked
-                else if (row === 3 && (col === 1 || col === 3)) {
-                    isLockedPosition = true;
-                }
-                // For row 5, only the center column (col 2) is locked
-                else if (row === 4 && col === 2) {
-                    isLockedPosition = true;
-                }
+                // Determine if this is a locked position based on puzzle data
+                const isLockedPosition = puzzleData.lockedTiles[row][col];
                 
                 // Skip locked tiles (they're already there)
                 if (isLockedPosition) return;
@@ -718,9 +630,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let allCorrect = true;
         
         // Check each row
-        for (let row = 0; row < 5; row++) {
-            const paletteType = Object.keys(palettes)[row];
-            const correctPalette = palettes[paletteType];
+        for (let row = 0; row < puzzleData.paletteTypes.length; row++) {
+            const paletteType = puzzleData.paletteTypes[row];
+            const correctPalette = puzzleData.palettes[paletteType];
             
             // Get the tiles in this row
             const rowTiles = [];
@@ -845,14 +757,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Find all tiles that are placed in the wrong position
         let misplacedTilesFound = 0;
         
-        for (let row = 0; row < 5; row++) {
-            const paletteType = Object.keys(palettes)[row];
-            const correctPalette = palettes[paletteType];
+        for (let row = 0; row < puzzleData.paletteTypes.length; row++) {
+            const paletteType = puzzleData.paletteTypes[row];
+            const correctPalette = puzzleData.palettes[paletteType];
             
             // Check each tile in this row
             for (let col = 0; col < 5; col++) {
-                // Skip center column (locked tiles)
-                if (col === 2) continue;
+                // Skip locked tiles
+                if (puzzleData.lockedTiles[row][col]) continue;
                 
                 const index = row * 5 + col;
                 const tile = solutionMatrix.querySelector(`.tile[data-index="${index}"]:not(.empty-slot)`);
