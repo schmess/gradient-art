@@ -748,3 +748,25 @@ button:active {
         -webkit-perspective: 1000px;
     }
 }
+
+.magic-glow {
+    box-shadow: 0 0 16px 6px #fff7b2, 0 0 32px 12px #ffe066, 0 0 48px 24px #ffd700, 0 0 64px 32px #ff6ec7;
+    border: 3px solid #ffe066;
+    animation: magicGlow 1.2s infinite alternate;
+    z-index: 20;
+}
+
+@keyframes magicGlow {
+    0% {
+        box-shadow: 0 0 16px 6px #fff7b2, 0 0 32px 12px #ffe066, 0 0 48px 24px #ffd700, 0 0 64px 32px #ff6ec7;
+        border-color: #ffe066;
+    }
+    50% {
+        box-shadow: 0 0 32px 12px #ffe066, 0 0 48px 24px #ffd700, 0 0 64px 32px #ff6ec7, 0 0 80px 40px #fff7b2;
+        border-color: #ff6ec7;
+    }
+    100% {
+        box-shadow: 0 0 16px 6px #fff7b2, 0 0 32px 12px #ffe066, 0 0 48px 24px #ffd700, 0 0 64px 32px #ff6ec7;
+        border-color: #ffe066;
+    }
+}
