@@ -543,7 +543,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             updateActiveTiles();
             hideLockEmojis();
-            checkCompletedSolution();
+            checkPuzzleSolution();
             return;
         }
 
@@ -705,7 +705,7 @@ document.addEventListener('DOMContentLoaded', function() {
         hideLockEmojis();
 
         // Auto-check solution after each move
-        checkCompletedSolution();
+        checkPuzzleSolution();
     }
     
     // Update tracking of active tiles
@@ -870,106 +870,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-    }
-    
-    // Function to verify if the solution is correct using brute force comparison
-    function verifySolution() {
-        console.log('==== Verifying Solution ====');
-        let allCorrect = true;
-        
-        // Check each row
-        for (let row = 0; row < puzzleData.paletteTypes.length; row++) {
-            const paletteType = puzzleData.paletteTypes[row];
-            const correctPalette = puzzleData.palettes[paletteType];
-            console.log(`Checking row ${row} (${paletteType})`);
-            
-            // Get the tiles in this row
-            const rowTiles = [];
-            for (let col = 0; col < 5; col++) {
-                const index = row * 5 + col;
-                const tile = solutionMatrix.querySelector(`.tile[data-index="${index}"]`);
-                if (tile && !tile.classList.contains('empty-slot')) {
-                    rowTiles.push(tile);
-                }
-            }
-            
-            // Skip incomplete rows
-            if (rowTiles.length < 5) {
-                allCorrect = false;
-                continue;
-            }
-            
-            // Get colors from the current row
-            const rowColors = rowTiles.map(tile => tile.dataset.color);
-            
-            // Create a frequency map for both expected and actual colors
-            const correctColorCounts = {};
-            const rowColorCounts = {};
-            
-            // Count occurrences of colors in the correct palette
-            for (const color of correctPalette) {
-                correctColorCounts[color] = (correctColorCounts[color] || 0) + 1;
-            }
-            
-            // Count occurrences of colors in the current row
-            for (const color of rowColors) {
-                rowColorCounts[color] = (rowColorCounts[color] || 0) + 1;
-            }
-            
-            // Check for missing or extra colors
-            const correctKeys = Object.keys(correctColorCounts);
-            const rowKeys = Object.keys(rowColorCounts);
-            
-            console.log(`  Expected colors: ${JSON.stringify(correctColorCounts)}`);
-            console.log(`  Actual colors: ${JSON.stringify(rowColorCounts)}`);
-            
-            // First check: make sure we have exactly the same color keys
-            if (correctKeys.length !== rowKeys.length) {
-                console.log('  ❌ Wrong number of unique colors');
-                allCorrect = false;
-                continue;
-            }
-            
-            // Second check: make sure all expected colors are present
-            const allKeysPresent = correctKeys.every(key => rowKeys.includes(key));
-            if (!allKeysPresent) {
-                console.log('  ❌ Missing some expected colors');
-                allCorrect = false;
-                continue;
-            }
-            
-            // Third check: make sure each color appears exactly the right number of times
-            const exactColorMatches = correctKeys.every(key => 
-                correctColorCounts[key] === rowColorCounts[key]
-            );
-            
-            if (!exactColorMatches) {
-                console.log('  ❌ Wrong number of occurrences for some colors');
-                allCorrect = false;
-                continue;
-            }
-            
-            console.log('  ✅ Row is correct!');
-            
-            // If needed, check color positions here (currently not required as per game rules)
-        }
-        
-        if (allCorrect) {
-            showSuccess();
-        } else {
-            // if needed, show puzzle is not completed message
-        }
-        
-        return allCorrect;
-    }
-    
-    // Helper to compare arrays
-    function arraysEqual(a, b) {
-        if (a.length !== b.length) return false;
-        for (let i = 0; i < a.length; i++) {
-            if (a[i] !== b[i]) return false;
-        }
-        return true;
     }
     
     // Update the blunder display
@@ -1234,10 +1134,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Add a method to verify the solution and show a success message when correct
-    function checkCompletedSolution() {
+    function checkPuzzleSolution() {
         // Only verify if solution is not currently being shown
         if (!solutionVisible) {
-            verifySolution();
+            verifyFinalSolution();
         }
     }
     
@@ -1491,4 +1391,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Expose showSuccess for the finish button
     window.showSuccess = showSuccess;
+
+    // Function to verify the final solution by checking each tile's position against puzzleData
+    function verifyFinalSolution() {
+        // Check if there are any empty slots left
+        const emptySlots = solutionMatrix.querySelectorAll('.empty-slot');
+        if (emptySlots.length > 0) {
+            // Not all tiles are placed yet
+            return false;
+        }
+
+        let allCorrect = true;
+        for (let row = 0; row < puzzleData.paletteTypes.length; row++) {
+            const paletteType = puzzleData.paletteTypes[row];
+            const correctPalette = puzzleData.palettes[paletteType];
+            for (let col = 0; col < 5; col++) {
+                const index = row * 5 + col;
+                const isLocked = puzzleData.lockedTiles[row][col];
+                // Always check the color, even for locked tiles (since they are pre-filled)
+                const expectedColor = correctPalette[col];
+                const tile = solutionMatrix.querySelector(`.tile[data-index="${index}"]`);
+                if (!tile || tile.classList.contains('empty-slot')) {
+                    allCorrect = false;
+                    break;
+                }
+                const actualColor = tile.dataset.color;
+                if (actualColor !== expectedColor) {
+                    allCorrect = false;
+                    break;
+                }
+            }
+            if (!allCorrect) break;
+        }
+        if (allCorrect) {
+            showSuccess();
+            return true;
+        }
+        // Optionally, you can show a message here if the solution is incorrect
+        return false;
+    }
 });
