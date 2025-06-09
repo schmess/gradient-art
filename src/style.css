@@ -777,4 +777,91 @@ button:active {
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
 
+/* Info Modal Styles */
+.info-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1200;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 40px;
+    box-sizing: border-box;
+}
+
+.info-modal-content {
+    background: linear-gradient(135deg, var(--dark), var(--darker));
+    border-radius: 16px;
+    padding: 32px 24px 24px 24px;
+    width: 95vw;
+    max-width: 800px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    text-align: left;
+    border: 2px solid var(--accent);
+    animation: modalFadeIn 0.5s ease-out;
+}
+
+.close-info-modal {
+    position: absolute;
+    top: 12px;
+    right: 18px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--accent);
+    cursor: pointer;
+    z-index: 10;
+    transition: color 0.2s;
+}
+.close-info-modal:hover {
+    color: var(--accent-dark);
+}
+
+.info-button {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 1300;
+    background: var(--accent);
+    color: var(--darker);
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    box-shadow: 0 2px 8px #0003;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+.info-button span {
+    font-size: 2rem;
+    font-weight: bold;
+}
+.info-button:hover {
+    color: var(--primary);
+    transform: scale(1.08);
+    box-shadow: none;
+}
+
+@media (max-width: 600px) {
+    .info-modal-content {
+        padding: 18px 6vw 18px 6vw;
+        font-size: 0.98rem;
+    }
+    .info-button {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+        top: 10px;
+        right: 10px;
+    }
+}
+
 

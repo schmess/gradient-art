@@ -30,12 +30,69 @@ if (!Array.prototype.find) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Welcome screen logic
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const readyButton = document.getElementById('ready-button');
+    const gameContainer = document.querySelector('.game-container');
+    const gameStats = document.querySelector('.game-stats');
+    const controls = document.querySelector('.controls');
+    const gameInfo = document.querySelector('.game-info');
+    const messageArea = document.getElementById('message');
+    const orientationOverlay = document.querySelector('.orientation-overlay');
+    const scoreModal = document.getElementById('score-modal');
+    const infoModal = document.getElementById('info-modal');
+    const closeInfoModal = document.getElementById('close-info-modal');
+    const infoButton = document.getElementById('info-button');
+
+    // Hide all game UI initially
+    gameContainer.style.display = 'none';
+    gameStats.style.display = 'none';
+    controls.style.display = 'none';
+    gameInfo.style.display = 'none';
+    messageArea.style.display = 'none';
+    if (scoreModal) scoreModal.style.display = 'none';
+    if (orientationOverlay) orientationOverlay.style.display = 'none';
+
+    // Hide info modal and button initially
+    infoModal.style.display = 'none';
+    infoButton.style.display = 'none';
+
+    // Show game UI and info modal on Ready
+    readyButton.addEventListener('click', function() {
+        welcomeScreen.style.display = 'none';
+        gameContainer.style.display = '';
+        gameStats.style.display = '';
+        controls.style.display = '';
+        gameInfo.style.display = '';
+        messageArea.style.display = '';
+        // Show info modal and info button
+        infoModal.style.display = 'flex';
+        infoButton.style.display = 'flex';
+        // Orientation overlay is managed by checkOrientation
+        checkOrientation();
+        initGame();
+    });
+
+    // Info button opens info modal
+    infoButton.addEventListener('click', function() {
+        infoModal.style.display = 'flex';
+    });
+
+    // Close info modal
+    closeInfoModal.addEventListener('click', function() {
+        infoModal.style.display = 'none';
+    });
+
+    // Optional: clicking outside modal-content closes info modal
+    infoModal.addEventListener('click', function(e) {
+        if (e.target === infoModal) {
+            infoModal.style.display = 'none';
+        }
+    });
+
     // Use en global variable from en.js (loaded in HTML before this file)
     
     // Check device orientation and add event listener to detect orientation changes
-    const orientationOverlay = document.querySelector('.orientation-overlay');
-    const gameContainer = document.querySelector('.game-container');
-    
     function checkOrientation() {
         // Only apply to mobile devices (screen width less than 768px)
         if (window.innerWidth <= 768) {
@@ -96,7 +153,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Game elements
     const scrambledMatrix = document.getElementById('scrambled-matrix');
     const solutionMatrix = document.getElementById('solution-matrix');
-    const messageArea = document.getElementById('message');
     const checkButton = document.getElementById('check-button');
     const hintButton = document.getElementById('hint-button');
     const resetButton = document.getElementById('reset-button');
