@@ -345,6 +345,10 @@ document.addEventListener('DOMContentLoaded', function() {
             tile.addEventListener('dragstart', handleDragStart);
             tile.addEventListener('dragend', handleDragEnd);
             
+            // Add dragover and drop listeners for swap functionality
+            tile.addEventListener('dragover', handleDragOver);
+            tile.addEventListener('drop', handleDrop);
+            
             // Add touch events for mobile
             tile.addEventListener('touchstart', handleTouchStart, { passive: false });
             tile.addEventListener('touchmove', handleTouchMove, { passive: false });
@@ -452,39 +456,104 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.preventDefault) {
             e.preventDefault(); // Necessary to allow drop
         }
-        
-        // Only allow dropping on empty slots
-        if (!this.classList.contains('empty-slot')) {
+        // Allow dropping on empty slots or non-locked, user-placed tiles in the solution matrix
+        if (
+            !this.classList.contains('empty-slot') &&
+            (!this.classList.contains('tile') || this.classList.contains('locked'))
+        ) {
             return false;
         }
-        
         e.dataTransfer.dropEffect = 'move';
         return false;
     }
     
     function handleDrop(e) {
         e.preventDefault();
-        
         if (!draggedTile) return;
-        
-        // Get the row of the drop target and color info
+
+        // Get the row/col of the drop target
         const targetIndex = parseInt(this.dataset.index);
         const targetRow = Math.floor(targetIndex / 5);
         const targetCol = targetIndex % 5;
         const paletteType = puzzleData.paletteTypes[targetRow];
         const correctPalette = puzzleData.palettes[paletteType];
         const tileColor = draggedTile.dataset.color;
-        
+        const isMovingWithinSolution = draggedTile.dataset.sourceMatrix === 'solution';
+
+        // If dropping on a non-empty, non-locked tile in the solution matrix (swap case)
+        if (!this.classList.contains('empty-slot') && this.classList.contains('tile') && !this.classList.contains('locked')) {
+            // Only allow swap if both are in the same row and both are user-placed (not locked)
+            const sourceIndex = parseInt(draggedTile.dataset.index);
+            const sourceRow = Math.floor(sourceIndex / 5);
+            if (sourceRow !== targetRow) {
+                // Cannot swap between rows - count as blunder
+                blunders++;
+                updateBlunderDisplay();
+                this.classList.add('shake');
+                setTimeout(() => {
+                    this.classList.remove('shake');
+                    if (draggedTile) draggedTile.style.opacity = '1';
+                }, 500);
+                messageArea.textContent = en.messages.sameRowOnly;
+                messageArea.className = 'message-area error';
+                return;
+            }
+            // Don't allow swapping with locked tiles (shouldn't happen, but just in case)
+            if (draggedTile.classList.contains('locked') || this.classList.contains('locked')) {
+                return;
+            }
+            // Swap the two tiles in the DOM
+            const sourceTile = draggedTile;
+            const targetTile = this;
+            // Swap color and background between the two tiles
+            const tempColor = sourceTile.dataset.color;
+            sourceTile.dataset.color = targetTile.dataset.color;
+            targetTile.dataset.color = tempColor;
+            // Update background gradients
+            const updateTileBackground = (tile, color) => {
+                const lighterColor = lightenColor(color, 15);
+                const darkerColor = darkenColor(color, 15);
+                tile.style.background = `linear-gradient(135deg, ${lighterColor}, ${color} 50%, ${darkerColor})`;
+            };
+            updateTileBackground(sourceTile, sourceTile.dataset.color);
+            updateTileBackground(targetTile, targetTile.dataset.color);
+            // Validate both rows after swap
+            if (!isRowValidAfterDrop(targetRow) || !isRowValidAfterDrop(sourceRow)) {
+                blunders++;
+                updateBlunderDisplay();
+                sourceTile.classList.add('wrong-position');
+                targetTile.classList.add('wrong-position');
+                messageArea.textContent = en.messages.wrongPosition;
+                messageArea.className = 'message-area error';
+                setTimeout(() => {
+                    sourceTile.classList.remove('wrong-position');
+                    targetTile.classList.remove('wrong-position');
+                }, 500);
+            } else {
+                sourceTile.classList.add('correct-position');
+                targetTile.classList.add('correct-position');
+                showRandomAffirmation();
+                setTimeout(() => {
+                    sourceTile.classList.remove('correct-position');
+                    targetTile.classList.remove('correct-position');
+                    if (messageArea.textContent === "") {
+                        checkAndShowAppreciation();
+                    }
+                }, 500);
+            }
+            updateActiveTiles();
+            hideLockEmojis();
+            checkCompletedSolution();
+            return;
+        }
+
         // Check if the color belongs to the correct palette (correct row)
         const colorInPalette = correctPalette.includes(tileColor);
         const colorPositionInPalette = correctPalette.indexOf(tileColor);
-        
+
         // Get additional information from the dataset
         const targetPaletteType = this.dataset.paletteType;
-        
-        // Check if we're moving from the solution matrix or the scrambled matrix
-        const isMovingWithinSolution = draggedTile.dataset.sourceMatrix === 'solution';
-        
+
         // Get all existing tiles in this row to check for duplicates
         const rowTiles = [];
         for (let col = 0; col < 5; col++) {
@@ -497,7 +566,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         }
-        
+
         if (isMovingWithinSolution) {
             // If moving within solution, only allow moves within the same row
             const sourceIndex = parseInt(draggedTile.dataset.index);
@@ -628,13 +697,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 500);
             }
         }
-        
+
         // Update active tiles
         updateActiveTiles();
-        
+
         // Hide lock emojis after first move
         hideLockEmojis();
-        
+
         // Auto-check solution after each move
         checkCompletedSolution();
     }
