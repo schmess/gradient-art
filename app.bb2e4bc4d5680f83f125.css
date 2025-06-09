@@ -354,7 +354,7 @@ button:active {
     justify-content: center;
     text-align: center;
     font-weight: bold;
-    gap: 10px;
+    position: relative;
 }
 
 .stat-value {
@@ -364,8 +364,10 @@ button:active {
 }
 
 .stat-label {
-    margin-top: 2px;
-    font-size: 1.2rem;
+    position: absolute;
+    right: -18px;
+    top: -4px;
+    font-size: 1em;
     color: var(--accent);
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
