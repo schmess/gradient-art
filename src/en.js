@@ -21,14 +21,8 @@ window.en = {
     resetGame: "Start Fresh"
   },
   
-  stats: {
-    time: "Time",
-    blunders: "Attempts", 
-    hints: "Inspirations"
-  },
-  
   messages: {
-    welcome: "✨ Welcome! Drag colors from the pool on the left to your canvas on the right to create beautiful palettes!",
+    welcome: "✨ Welcome! Drag colors from the pool on the left to your canvas on the right to create beautiful palettes. Complete all rows to win!",
     duplicateColor: "This color is already in your palette! Try another shade instead 🎨",
     wrongRow: "This color belongs in another palette! Try a different row ✨",
     wrongPosition: "Good color choice! Try placing it somewhere else in this row 👍",
@@ -36,7 +30,8 @@ window.en = {
     showingSolution: "✨ Here's how it should look! When you're ready, click 'Let Me Try Again'",
     continueArranging: "You're doing great! Keep arranging colors to create beautiful palettes 🎨",
     showingHint: "💫 Here's a hint! The highlighted colors might look better in a different spot",
-    congratulations: "🎉 Amazing work! You created beautiful palettes in {minutes}m {seconds}s with {blunders} attempts and {hintsUsed} inspirations!"
+    congratulations: "🎉 Amazing work! You created beautiful palettes in {minutes}m {seconds}s with {blunders} attempts and {hintsUsed} inspirations!",
+    noMisplacedTiles: "✨ All tiles in this row are perfectly placed! No hints needed right now."
   },
   
   howToPlay: {

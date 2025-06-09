@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
         lockedTiles: [
             [false, false, true, false, false],  // Row 1: Only center tile
             [false, true, false, true, false],   // Row 2: Columns 2 and 4
-            [true, false, true, false, true],    // Row 3: Columns 1, 3, and 5
+            [true, true, true, true, true],    // Row 3: Columns 1, 3, and 5
             [false, true, false, true, false],   // Row 4: Columns 2 and 4
             [false, false, true, false, false]   // Row 5: Only center tile
         ]
@@ -124,11 +124,6 @@ document.addEventListener('DOMContentLoaded', function() {
             descElem.textContent = en.paletteTypes[typeKey].description;
         }
     }
-    
-    // Update stat labels
-    document.querySelectorAll('.stat-label')[0].textContent = en.stats.time;
-    document.querySelectorAll('.stat-label')[1].textContent = en.stats.blunders;
-    document.querySelectorAll('.stat-label')[2].textContent = en.stats.hints;
     
     // Game state
     let draggedTile = null;
@@ -1074,81 +1069,94 @@ document.addEventListener('DOMContentLoaded', function() {
         // Increment hints used counter
         hintsUsed++;
         updateHintsDisplay();
-        
+
         // Disable the hint button while the countdown is active
         hintButton.disabled = true;
-        
+
+        // Remove any previous magic glow
+        const allTiles = solutionMatrix.querySelectorAll('.tile');
+        allTiles.forEach(tile => {
+            tile.classList.remove('magic-glow');
+            tile.classList.remove('wrong-position'); // Remove old highlight if present
+        });
+
         // Find all tiles that are placed in the wrong position
         let misplacedTilesFound = 0;
-        
+
         for (let row = 0; row < puzzleData.paletteTypes.length; row++) {
             const paletteType = puzzleData.paletteTypes[row];
             const correctPalette = puzzleData.palettes[paletteType];
-            
+
             // Check each tile in this row
             for (let col = 0; col < 5; col++) {
                 // Skip locked tiles
                 if (puzzleData.lockedTiles[row][col]) continue;
-                
+
                 const index = row * 5 + col;
                 const tile = solutionMatrix.querySelector(`.tile[data-index="${index}"]:not(.empty-slot)`);
-                
+
                 // If there's a tile in this position
                 if (tile && !tile.classList.contains('empty-slot')) {
                     const tileColor = tile.dataset.color;
-                    
+
                     // Check if the color belongs to this palette
                     if (correctPalette.includes(tileColor)) {
                         // Check if it's in the correct position
                         const correctPosition = correctPalette.indexOf(tileColor);
-                        
+
                         if (correctPosition !== col) {
                             // This tile is in the wrong position
-                            tile.classList.add('wrong-position');
+                            tile.classList.add('magic-glow');
                             misplacedTilesFound++;
                         }
                     }
                 }
             }
         }
-        
+
         // Show message
-        messageArea.textContent = en.messages.showingHint;
-        messageArea.className = 'message-area hint';
-        
-        // Start countdown from 10 seconds
-        let countdownTime = 10;
-        
+        if (misplacedTilesFound > 0) {
+            messageArea.textContent = en.messages.showingHint;
+            messageArea.className = 'message-area hint';
+        } else {
+            messageArea.textContent = en.messages.noMisplacedTiles || "All tiles are correctly placed in their rows! ✨";
+            messageArea.className = 'message-area success';
+        }
+
+        // Start countdown from 5 seconds
+        let countdownTime = 5;
+
         // Update button text with countdown
         hintButton.textContent = en.buttons.hintWithCountdown.replace('{seconds}', countdownTime);
-        
+
         // Clear any existing countdown
         if (hintCountdownInterval) {
             clearInterval(hintCountdownInterval);
         }
-        
+
         // Set up countdown interval
         hintCountdownInterval = setInterval(() => {
             countdownTime--;
-            
+
             // Update button text
             hintButton.textContent = en.buttons.hintWithCountdown.replace('{seconds}', countdownTime);
-            
+
             // When countdown reaches 0
             if (countdownTime <= 0) {
                 // Clear the interval
                 clearInterval(hintCountdownInterval);
-                
+
                 // Remove highlighting from all tiles
                 const allTiles = solutionMatrix.querySelectorAll('.tile');
                 allTiles.forEach(tile => {
+                    tile.classList.remove('magic-glow');
                     tile.classList.remove('wrong-position');
                 });
-                
+
                 // Reset button text and enable it
                 hintButton.textContent = en.buttons.showHint;
                 hintButton.disabled = false;
-                
+
                 // Clear message
                 messageArea.textContent = "";
                 messageArea.className = 'message-area';
